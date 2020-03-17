@@ -36,10 +36,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Silk.NET.OpenAL.Extensions.Soft", "src\OpenAL\Extensions\Silk.NET.OpenAL.Extensions.Soft\Silk.NET.OpenAL.Extensions.Soft.csproj", "{94D7D3A3-3640-4791-BE19-CA50C59187C6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Properties", "Build Properties", "{21F1A5E2-9861-49A6-934D-DF5AAA03AFFE}"
-ProjectSection(SolutionItems) = preProject
-	build\props\bindings.props = build\props\bindings.props
-	build\props\common.props = build\props\common.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		build\props\bindings.props = build\props\bindings.props
+		build\props\common.props = build\props\common.props
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFAC}") = "Silk.NET.Input.Common", "src\Input\Silk.NET.Input.Common\Silk.NET.Input.Common.csproj", "{8FFF49D6-B029-400B-8510-1A088868DFA6}"
 EndProject
@@ -214,9 +214,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "C#", "C#", "{974C560A-E6FE-40BF-B1DF-24AEACBA34A9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenGL", "OpenGL", "{7DA9D3C2-A459-4D4F-A7E3-AA14F1F4FD27}"
-ProjectSection(SolutionItems) = preProject
-	examples\C#\OpenGL\Directory.Build.props = examples\C#\OpenGL\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		examples\C#\OpenGL\Directory.Build.props = examples\C#\OpenGL\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tutorial 1.1 - Hello Window", "examples\C#\OpenGL\Tutorial 1.1 - Hello Window\Tutorial 1.1 - Hello Window.csproj", "{13056B96-6B67-47E8-AFA5-3940C2D7F341}"
 EndProject
@@ -333,6 +333,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Silk.NET.EGL.Extensions.WL", "src\Windowing\EGL\Extensions\Silk.NET.EGL.Extensions.WL\Silk.NET.EGL.Extensions.WL.csproj", "{1E76415E-A46F-45BD-B9F7-A054ADD21783}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperInvokeDiagnostics", "src\Lab\SuperInvokeDiagnostics\SuperInvokeDiagnostics.csproj", "{6C20EEEB-31FA-4A8B-AF96-8E98866C8E20}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{1B3A0D1E-8E73-46C4-9560-AFD8AA9305AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Silk.NET.UI.Common", "src\UI\Silk.NET.UI.Common\Silk.NET.UI.Common.csproj", "{25DFD49C-5951-4D36-BCDB-56705EAD4523}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Silk.NET.UI.Test", "src\UI\Silk.NET.UI.Test\Silk.NET.UI.Test.csproj", "{3B6716CD-C739-459E-B248-06BB489E48F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -2063,6 +2069,30 @@ Global
 		{6C20EEEB-31FA-4A8B-AF96-8E98866C8E20}.Release|x64.Build.0 = Release|Any CPU
 		{6C20EEEB-31FA-4A8B-AF96-8E98866C8E20}.Release|x86.ActiveCfg = Release|Any CPU
 		{6C20EEEB-31FA-4A8B-AF96-8E98866C8E20}.Release|x86.Build.0 = Release|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Debug|x64.Build.0 = Debug|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Debug|x86.Build.0 = Debug|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Release|x64.ActiveCfg = Release|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Release|x64.Build.0 = Release|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Release|x86.ActiveCfg = Release|Any CPU
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523}.Release|x86.Build.0 = Release|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Release|x64.Build.0 = Release|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{3B6716CD-C739-459E-B248-06BB489E48F8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BFE429EB-4C2E-4BF3-A302-C9C5A2FDA6D7} = {23324041-2076-477C-A4BF-B385B8066C6C}
@@ -2217,5 +2247,7 @@ Global
 		{0C6CBE25-5B00-4A4D-88D1-BCF3E8369126} = {C0C1DCC3-D0B2-4764-A4DE-F7739AA7775A}
 		{1E76415E-A46F-45BD-B9F7-A054ADD21783} = {C0C1DCC3-D0B2-4764-A4DE-F7739AA7775A}
 		{6C20EEEB-31FA-4A8B-AF96-8E98866C8E20} = {DFA0E841-33E5-4533-AF00-964E21A141B8}
+		{25DFD49C-5951-4D36-BCDB-56705EAD4523} = {1B3A0D1E-8E73-46C4-9560-AFD8AA9305AA}
+		{3B6716CD-C739-459E-B248-06BB489E48F8} = {1B3A0D1E-8E73-46C4-9560-AFD8AA9305AA}
 	EndGlobalSection
 EndGlobal
