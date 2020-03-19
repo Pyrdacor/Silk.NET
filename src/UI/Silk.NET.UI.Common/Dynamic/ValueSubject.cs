@@ -10,6 +10,8 @@ namespace Silk.NET.UI.Common.Dynamic
     {
         private bool firstSubscription = true;
 
+        public T Value => Value;
+
         public ValueSubject(T value)
         {
             currentValue = value;

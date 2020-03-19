@@ -14,6 +14,11 @@ namespace Silk.NET.UI.Common.Dynamic
             this.componentId = componentId;
         }
 
+        public Observable<bool> GetElseObservable()
+        {
+            return condition.Map(c => !c);
+        }
+
         public override void Bind(Component parentComponent)
         {
             condition.Subscribe(result =>
@@ -33,7 +38,7 @@ namespace Silk.NET.UI.Common.Dynamic
                         boundComponent = null;
                     }
                 }
-            });            
+            });
         }
     }
 }

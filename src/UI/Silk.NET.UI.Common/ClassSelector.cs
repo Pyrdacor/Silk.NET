@@ -6,6 +6,7 @@ namespace Silk.NET.UI.Common
 {
     internal class ClassSelector : Selector
     {
+        internal override int Priority => 2;
         private List<string> classes;
 
         public ClassSelector(params string[] classes)
