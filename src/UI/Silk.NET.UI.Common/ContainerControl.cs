@@ -12,7 +12,7 @@ namespace Silk.NET.UI.Common
             remove => Children.CollectionChanged -= value;
         }
 
-        public ContainerControl(string? id)
+        public ContainerControl(string id)
             : base(id)
         {
 

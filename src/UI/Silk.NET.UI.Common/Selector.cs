@@ -7,7 +7,7 @@ namespace Silk.NET.UI.Common
     {
         public string Name { get; }
 
-        protected Selector([CallerMemberName] string? name = null)
+        protected Selector([CallerMemberName] string name = null)
         {
             Name = name ?? nameof(Selector);
         }

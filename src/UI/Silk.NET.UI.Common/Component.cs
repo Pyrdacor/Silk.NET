@@ -25,8 +25,8 @@ namespace Silk.NET.UI.Common
 
     public abstract class Component : Control
     {
-        private Template? template;
-        private Styles? styles;
+        private Template template;
+        private Styles styles;
 
         protected Component()
             : base(null)
@@ -36,13 +36,18 @@ namespace Silk.NET.UI.Common
 
         internal void Init()
         {
-#nullable disable
             template.CreateFor(this);
             styles.Apply(template, this);
-#nullable restore
         }
 
-        internal static Component Create(Type type, string? id)
+        internal override void Destroy()
+        {
+            base.Destroy();
+
+            // TODO ?
+        }
+
+        internal static Component Create(Type type, string id)
         {
             var templateAttributes = type.GetCustomAttributes(typeof(TemplateAttribute), false);
 
@@ -54,10 +59,8 @@ namespace Silk.NET.UI.Common
             if (stylesAttributes.Length == 0)
                 throw new InvalidOperationException("Components need the attribute `Styles`");
 
-#nullable disable
             var templateType = (templateAttributes[0] as TemplateAttribute).TemplateType;
             var stylesType = (stylesAttributes[0] as StylesAttribute).StylesType;
-#nullable restore
 
             if (!templateType.IsSubclassOf(typeof(Template)))
                 throw new InvalidOperationException($"Component template type {templateType.Name} is not derived from class `Template`");

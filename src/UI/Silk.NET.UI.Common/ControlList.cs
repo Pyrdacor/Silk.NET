@@ -16,10 +16,10 @@ namespace Silk.NET.UI.Common
             this.parent = parent;
         }
 
-        public event NotifyCollectionChangedEventHandler? CollectionChanged;
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         private void InvokeCollectionChange(NotifyCollectionChangedAction action,
-            int startIndex, int count, List<Control>? controls = null)
+            int startIndex, int count, List<Control> controls = null)
         {
             NotifyCollectionChangedEventArgs args;
             List<Control> changedControls = controls ?? this.controls.GetRange(startIndex, count);

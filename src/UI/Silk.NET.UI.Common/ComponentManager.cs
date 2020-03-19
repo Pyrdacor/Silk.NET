@@ -28,7 +28,7 @@ namespace Silk.NET.UI.Common
             Loop(rootComponent);
         }
 
-        internal static Component InitializeComponent(string name, string? id)
+        internal static Component InitializeComponent(string name, string id)
         {
             if (componentTypesByFullName.ContainsKey(name))
                 return Component.Create(componentTypesByFullName[name], id);
