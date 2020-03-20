@@ -5,6 +5,7 @@ namespace Silk.NET.UI.Common
 {
     public abstract class Selector
     {
+        internal abstract int Priority { get; }
         public string Name { get; }
 
         protected Selector([CallerMemberName] string name = null)

@@ -5,6 +5,7 @@ namespace Silk.NET.UI.Common
 {
     internal class IdSelector : Selector
     {
+        internal override int Priority => 3;
         private List<string> ids;
 
         public IdSelector(params string[] ids)

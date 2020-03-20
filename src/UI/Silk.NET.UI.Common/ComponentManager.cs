@@ -11,8 +11,15 @@ namespace Silk.NET.UI.Common
         private static readonly Dictionary<string, Type> componentTypesByFullName = new Dictionary<string, Type>();
         private static readonly Assembly entryAssembly = Assembly.GetEntryAssembly();
 
-        public static void Run(Component rootComponent)
+        public static void Run(Type rootComponentType)
         {
+            if (!rootComponentType.IsSubclassOf(typeof(RootComponent)))
+                throw new ArgumentException($"The given type is not a subclass of `{nameof(RootComponent)}`.");
+
+            IControlRenderer controlRenderer = null; // TODO: get it from somewhere
+            var rootComponent = (RootComponent)Activator.CreateInstance(rootComponentType);
+            rootComponent.SetControlRenderer(controlRenderer);
+
             // find and register all component types
             foreach (var type in FindTypes((type) => type.IsSubclassOf(typeof(Component))))
             {
@@ -24,8 +31,14 @@ namespace Silk.NET.UI.Common
                 componentTypesByName[type.Name].Add(type.FullName);
             }
 
+            // init root component and its view
+            rootComponent.InitControl();
+
             // enter UI loop
             Loop(rootComponent);
+
+            // destroy root component view
+            rootComponent.DestroyView();
         }
 
         internal static Component InitializeComponent(string name, string id)
@@ -48,6 +61,7 @@ namespace Silk.NET.UI.Common
         {
             // TODO: process UI events
             // TODO: draw / update UI
+            rootComponent.RenderControl();
         }
 
         private static IEnumerable<Type> FindTypes(Func<Type, bool> condition)

@@ -1,6 +1,6 @@
 namespace Silk.NET.UI.Common.Properties
 {
-    public class StringProperty : ComponentProperty<string>
+    public class StringProperty : ControlProperty<string>
     {
         private string value = null;
 

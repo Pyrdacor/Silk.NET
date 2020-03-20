@@ -34,16 +34,14 @@ namespace Silk.NET.UI.Common
 
         }
 
-        internal void Init()
+        internal override void InitView()
         {
             template.CreateFor(this);
             styles.Apply(template, this);
         }
 
-        internal override void Destroy()
+        internal void DestroyView()
         {
-            base.Destroy();
-
             // TODO ?
         }
 

@@ -1,6 +1,6 @@
 namespace Silk.NET.UI.Common.Properties
 {
-    public class BoolProperty : ComponentProperty<bool?>
+    public class BoolProperty : ControlProperty<bool?>
     {
         private bool? value = null;
 

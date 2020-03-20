@@ -1,6 +1,6 @@
 namespace Silk.NET.UI.Common.Properties
 {
-    public class IntProperty : ComponentProperty<int?>
+    public class IntProperty : ControlProperty<int?>
     {
         private int? value = null;
 

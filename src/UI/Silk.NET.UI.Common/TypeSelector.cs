@@ -5,6 +5,7 @@ namespace Silk.NET.UI.Common
 {
     internal class TypeSelector : Selector
     {
+        internal override int Priority => 1;
         private List<Type> types;
 
         public TypeSelector(params Type[] types)
