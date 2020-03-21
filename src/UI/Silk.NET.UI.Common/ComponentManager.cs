@@ -9,7 +9,6 @@ namespace Silk.NET.UI.Common
     {
         private static readonly Dictionary<string, List<string>> componentTypesByName = new Dictionary<string, List<string>>();
         private static readonly Dictionary<string, Type> componentTypesByFullName = new Dictionary<string, Type>();
-        private static readonly Assembly entryAssembly = Assembly.GetEntryAssembly();
 
         public static void Run(Type rootComponentType)
         {

@@ -1,4 +1,4 @@
-using System.Drawing;
+using System.ComponentModel;
 
 namespace Silk.NET.UI.Common
 {
@@ -7,7 +7,8 @@ namespace Silk.NET.UI.Common
         #region Background
 
         public BackgroundStyle Background;
-        public Color BackgroundColor;
+        [DefaultValue("#ffffff")] // TODO
+        public ColorValue BackgroundColor;
 
         #endregion
 
@@ -19,9 +20,12 @@ namespace Silk.NET.UI.Common
         public BorderSideStyle BorderRight;
         public BorderSideStyle BorderBottom;
         public BorderSideStyle BorderLeft;
+        [DefaultValue(0)]
         public AllDirectionStyleValue<int> BorderSize;
+        [DefaultValue(Common.BorderLineStyle.None)]
         public AllDirectionStyleValue<BorderLineStyle> BorderLineStyle;
-        public AllDirectionStyleValue<Color> BorderColor;
+        [DefaultValue("#000000")]
+        public AllDirectionStyleValue<ColorValue> BorderColor;
 
         #endregion
     }

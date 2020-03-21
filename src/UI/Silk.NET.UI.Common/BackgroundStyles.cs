@@ -1,9 +1,9 @@
-using System.Drawing;
-
+using System.ComponentModel;
 namespace Silk.NET.UI.Common
 {
     public struct BackgroundStyle
     {
-        public Color Color;
+        [DefaultValue("#ffffff")] // TODO
+        public ColorValue Color;
     }
 }

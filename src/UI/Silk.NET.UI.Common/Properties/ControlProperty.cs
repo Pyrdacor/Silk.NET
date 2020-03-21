@@ -38,6 +38,7 @@ namespace Silk.NET.UI.Common.Properties
         internal Observable<T> BoundVariable { get; private set; }
         public bool ChangeEventsEnabled { get; set; } = true;
 
+        internal event Action InternalValueChanged;
         public event Action ValueChanged;
         /// <summary>
         /// Is not triggered by manual value changes.
@@ -70,6 +71,7 @@ namespace Silk.NET.UI.Common.Properties
         {
             if (ChangeEventsEnabled)
                 ValueChanged?.Invoke();
+            InternalValueChanged?.Invoke();
         }
     }
 }

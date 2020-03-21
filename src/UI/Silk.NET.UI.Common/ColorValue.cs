@@ -27,7 +27,7 @@ namespace Silk.NET.UI.Common
     ///  "#fa0b"
     ///  "#f0f"
     /// </summary>
-    public struct ColorValue
+    public struct ColorValue : IEquatable<ColorValue>
     {
         private static readonly Regex RgbPattern = new Regex(@"^([0-9]{1,3}) ([0-9]{1,3}) ([0-9]{1,3})$", RegexOptions.Compiled);
         private static readonly Regex RgbaPattern = new Regex(@"^([0-9]{1,3}) ([0-9]{1,3}) ([0-9]{1,3}) ([0-9]{1,3})$", RegexOptions.Compiled);
@@ -37,6 +37,34 @@ namespace Silk.NET.UI.Common
         private static readonly Regex HexRgbShortPattern = new Regex(@"^#([0-9a-f])([0-9a-f])([0-9a-f])$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private Color color;
+
+        public bool Equals(ColorValue other)
+        {
+            return color.Equals(other.color);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            return this.Equals((ColorValue)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return color.GetHashCode();
+        }
+
+        public static bool operator ==(ColorValue lhs, ColorValue rhs)
+        {
+            return lhs.Equals(rhs);
+        }
+
+        public static bool operator !=(ColorValue lhs, ColorValue rhs)
+        {
+            return !(lhs == rhs);
+        }
 
         public ColorValue(Color color)
         {

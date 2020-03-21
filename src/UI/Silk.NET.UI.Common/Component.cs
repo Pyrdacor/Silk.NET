@@ -3,6 +3,7 @@ using System.Reflection;
 
 namespace Silk.NET.UI.Common
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class TemplateAttribute : Attribute
     {
         internal Type TemplateType { get; }
@@ -13,6 +14,7 @@ namespace Silk.NET.UI.Common
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class StylesAttribute : Attribute
     {
         internal Type StylesType { get; }
@@ -47,36 +49,41 @@ namespace Silk.NET.UI.Common
 
         internal static Component Create(Type type, string id)
         {
-            var templateAttributes = type.GetCustomAttributes(typeof(TemplateAttribute), false);
+            var templateAttribute = type.GetCustomAttribute(typeof(TemplateAttribute), false);
 
-            if (templateAttributes.Length == 0)
-                throw new InvalidOperationException("Components need the attribute `Template`");
+            if (templateAttribute == null)
+                throw new InvalidOperationException($"Component `{type.Name}` needs the attribute `Template`.");
 
-            var stylesAttributes = type.GetCustomAttributes(typeof(StylesAttribute), false);
+            var stylesAttribute = type.GetCustomAttribute(typeof(StylesAttribute), false);
 
-            if (stylesAttributes.Length == 0)
-                throw new InvalidOperationException("Components need the attribute `Styles`");
+            if (stylesAttribute == null)
+                throw new InvalidOperationException($"Component `{type.Name}` needs the attribute `Styles`.");
 
-            var templateType = (templateAttributes[0] as TemplateAttribute).TemplateType;
-            var stylesType = (stylesAttributes[0] as StylesAttribute).StylesType;
+            var templateType = (templateAttribute as TemplateAttribute).TemplateType;
+            var stylesType = (stylesAttribute as StylesAttribute).StylesType;
 
             if (!templateType.IsSubclassOf(typeof(Template)))
-                throw new InvalidOperationException($"Component template type {templateType.Name} is not derived from class `Template`");
+                throw new InvalidOperationException($"Component template type {templateType.Name} is not derived from class `Template`.");
             if (!stylesType.IsSubclassOf(typeof(Styles)))
-                throw new InvalidOperationException($"Component styles type {stylesType.Name} is not derived from class `Styles`");
+                throw new InvalidOperationException($"Component styles type {stylesType.Name} is not derived from class `Styles`.");
 
+            var component = TryTypeCreation<Component>(type);
+
+            if (component == null)
+                throw new InvalidOperationException($"Type {type.Name} is not derived from class `Component`.");
+
+            component.Id = id;
+            component.template = TryTypeCreation<Template>(templateType);
+            component.styles = TryTypeCreation<Styles>(stylesType);
+
+            return component;
+        }
+
+        private static T TryTypeCreation<T>(Type type) where T : class
+        {
             try
             {
-                var component = Activator.CreateInstance(type) as Component;
-
-                if (component == null)
-                    throw new InvalidOperationException($"Type {type.Name} is no valid component.");
-
-                component.Id = id;
-                component.template = (Template)Activator.CreateInstance(templateType);
-                component.styles = (Styles)Activator.CreateInstance(stylesType);
-                
-                return component;
+                return (T)Activator.CreateInstance(type);
             }
             catch (Exception ex)            
             {                

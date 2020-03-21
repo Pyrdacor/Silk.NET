@@ -14,6 +14,8 @@ namespace Silk.NET.UI.Common
         {
             get => Parent != null ? Parent.ControlRenderer : null;
         }
+        private readonly ControlStyle style = new ControlStyle();
+        internal ControlStyle Style => style;
 
 
         #region Lifecycle Hooks
@@ -46,14 +48,38 @@ namespace Silk.NET.UI.Common
 
         #region Control Properties
 
-        private Dictionary<string, IControlProperty> controlProperties = new Dictionary<string, IControlProperty>();
+        private Dictionary<string, IControlProperty> controlProperties = new Dictionary<string, IControlProperty>();        
+
+        #region State
+
+        private BoolProperty visible = new BoolProperty(nameof(Visible), true);
+        private BoolProperty enabled = new BoolProperty(nameof(Enabled), true);
+
+        public bool Visible
+        {
+            get
+            {
+                if (Parent == null && !(this is RootComponent))
+                    return false;
+
+                return visible.Value ?? true;
+            }
+            set => visible.Value = value;
+        }
+        public bool Enabled
+        {
+            get => enabled.Value ?? true;
+            set => enabled.Value = value;
+        }
+
+        #endregion
 
         #region Metrics
 
-        private IntProperty width = new IntProperty("Width", 0);
-        private IntProperty height = new IntProperty("Height", 0);
-        private IntProperty x = new IntProperty("X", 0);
-        private IntProperty y = new IntProperty("Y", 0);
+        private IntProperty width = new IntProperty(nameof(Width), 0);
+        private IntProperty height = new IntProperty(nameof(Height), 0);
+        private IntProperty x = new IntProperty(nameof(X), 0);
+        private IntProperty y = new IntProperty(nameof(Y), 0);
 
         public int X
         {

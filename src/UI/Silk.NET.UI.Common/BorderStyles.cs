@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Drawing;
 
 namespace Silk.NET.UI.Common
@@ -44,15 +45,21 @@ namespace Silk.NET.UI.Common
 
     public struct BorderStyle
     {
+        [DefaultValue(0)]
         public AllDirectionStyleValue<int> Size;
+        [DefaultValue(BorderLineStyle.None)]
         public AllDirectionStyleValue<BorderLineStyle> LineStyle;
+        [DefaultValue("#000000")]
         public AllDirectionStyleValue<Color> Color;
     }
 
     public struct BorderSideStyle
     {
+        [DefaultValue(0)]
         public int Size;
+        [DefaultValue(BorderLineStyle.None)]
         public BorderLineStyle LineStyle;
-        public Color Color;
+        [DefaultValue("#000000")]
+        public ColorValue Color;
     }
 }

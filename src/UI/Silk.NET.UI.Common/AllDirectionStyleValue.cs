@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Silk.NET.UI.Common
 {
-    public struct AllDirectionStyleValue<T> where T : struct
+    public struct AllDirectionStyleValue<T> : IEquatable<AllDirectionStyleValue<T>> where T : struct
     {
         private static readonly Regex Pattern = new Regex(@"^([^ ]+) ?([^ ]+)? ?([^ ]+)? ?([^ ]+)?\s*$", RegexOptions.Compiled);
 
@@ -11,6 +12,45 @@ namespace Silk.NET.UI.Common
         public T Right;
         public T Top;
         public T Bottom;
+
+        public bool Equals(AllDirectionStyleValue<T> other)
+        {
+            var comparer = EqualityComparer<T>.Default;
+            return comparer.Equals(Left, other.Left) &&
+                   comparer.Equals(Right, other.Right) &&
+                   comparer.Equals(Top, other.Top) &&
+                   comparer.Equals(Bottom, other.Bottom);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            return this.Equals((AllDirectionStyleValue<T>)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 17;
+
+            hash = hash * 23 + Left.GetHashCode();
+            hash = hash * 23 + Right.GetHashCode();
+            hash = hash * 23 + Top.GetHashCode();
+            hash = hash * 23 + Bottom.GetHashCode();
+
+            return hash;
+        }
+
+        public static bool operator ==(AllDirectionStyleValue<T> lhs, AllDirectionStyleValue<T> rhs)
+        {
+            return lhs.Equals(rhs);
+        }
+
+        public static bool operator !=(AllDirectionStyleValue<T> lhs, AllDirectionStyleValue<T> rhs)
+        {
+            return !(lhs == rhs);
+        }
 
         public AllDirectionStyleValue(T all)
         {

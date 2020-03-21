@@ -34,7 +34,7 @@ namespace Silk.NET.UI.Common.Dynamic
                 {
                     if (boundComponent != null)
                     {
-                        boundComponent.Destroy();
+                        boundComponent.DestroyControl();
                         boundComponent = null;
                     }
                 }

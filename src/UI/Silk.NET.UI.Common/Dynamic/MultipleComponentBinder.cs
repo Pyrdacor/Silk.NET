@@ -24,7 +24,7 @@ namespace Silk.NET.UI.Common.Dynamic
             {
                 foreach (var boundComponent in boundComponents)
                 {
-                    boundComponent.Destroy();
+                    boundComponent.DestroyControl();
                 }
 
                 boundComponents.Clear();
