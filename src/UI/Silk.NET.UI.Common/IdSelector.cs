@@ -13,7 +13,7 @@ namespace Silk.NET.UI.Common
             this.ids = new List<string>(ids);
         }
 
-        protected override bool Match(Control control)
+        protected override bool Match(Control control, SelectorPathNode path)
         {
             return control.Id == null ? false : ids.Contains(control.Id);
         }

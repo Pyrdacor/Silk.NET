@@ -44,11 +44,19 @@ namespace Silk.NET.UI.Common
         private static object GetStylePropertyValue(object parent, string name)
         {
             var type = parent.GetType();
+
+            if (ControlStyle.CheckGenericType(type, typeof(Nullable<>)))
+                type = type.GenericTypeArguments[0];
+
             int dotIndex = name.IndexOf(".");
             
             if (dotIndex != -1)
             {
-                var newParent = type.GetField(name.Substring(0, dotIndex));
+                var newParent = type.GetField(name.Substring(0, dotIndex)).GetValue(parent);
+
+                if (newParent == null)
+                    return null;
+
                 return GetStylePropertyValue(newParent, name.Substring(dotIndex + 1));
             }
 
@@ -62,16 +70,21 @@ namespace Silk.NET.UI.Common
                 .Where(result => result.Value != null);
         }
 
-        internal void Apply(Template template, Component component)
+        internal void Apply(Component component)
         {
             var styleList = styles.ToList();
             styleList.Sort(new StyleComparer()); // sort by selector priority
 
             foreach (var style in styleList)
             {
-                foreach (var field in EnumerateFields(style.Value))
+                var matchingControls = component.FindMatchingControls(component, style.Key);
+
+                foreach (var control in matchingControls)
                 {
-                    component.Style.SetProperty(field.Key, field.Value);
+                    foreach (var field in EnumerateFields(style.Value))
+                    {
+                        control.Style.SetProperty(field.Key, field.Value);
+                    }
                 }
             }
         }

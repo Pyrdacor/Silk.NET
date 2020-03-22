@@ -1,10 +1,13 @@
+using System;
+
 namespace Silk.NET.UI.Common.Properties
 {
-    public class BoolProperty : ControlProperty<bool?>
+    public class EnumProperty : ControlProperty<int?>
     {
-        private bool? value = null;
+        private Type enumType;
+        private int? value = null;
 
-        public override bool? Value 
+        public override int? Value 
         { 
             get => value;
             set
@@ -17,9 +20,10 @@ namespace Silk.NET.UI.Common.Properties
             }
         }
 
-        internal BoolProperty(string name, bool? initialValue = null)
+        internal EnumProperty(string name, Type enumType, int? initialValue = null)
             : base(name)
         {
+            this.enumType = enumType;
             value = initialValue;
         }
     }

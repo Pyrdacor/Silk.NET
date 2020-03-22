@@ -23,7 +23,7 @@ namespace Silk.NET.UI.Test
             Add(Selector.ForId("foo"), new Style()
             {
                 Background = new BackgroundStyle {
-                    Color = "#ff00ff"
+                    Color = "yellow"
                 },
             });
         }
@@ -33,7 +33,11 @@ namespace Silk.NET.UI.Test
     [Styles(typeof(MyStyles))]
     class MyComponent : RootComponent
     {
-        
+        protected override void OnAfterViewInit()
+        {
+            Console.WriteLine("Id: " + Children[0].Id);
+            // Console.WriteLine("background Color: " + Children[0].Style.Get<ColorValue?>("Background.Color").Value.Value.ToString());
+        }
     }
 
     class Program

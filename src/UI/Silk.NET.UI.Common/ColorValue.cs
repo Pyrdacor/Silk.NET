@@ -198,5 +198,10 @@ namespace Silk.NET.UI.Common
 
             return new ColorValue(color);
         }
+
+        public override string ToString()
+        {
+            return color.ToString();
+        }
     }
 }

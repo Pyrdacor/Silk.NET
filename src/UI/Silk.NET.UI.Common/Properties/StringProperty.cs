@@ -20,7 +20,7 @@ namespace Silk.NET.UI.Common.Properties
         internal StringProperty(string name, string initialValue = null)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
     }
 }

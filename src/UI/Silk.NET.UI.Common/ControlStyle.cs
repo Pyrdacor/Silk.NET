@@ -31,7 +31,7 @@ namespace Silk.NET.UI.Common
                     checkType = fieldType.GenericTypeArguments[0];
                 }
 
-                if (checkType.IsPrimitive || !checkType.IsEnum ||
+                if (checkType.IsPrimitive || checkType.IsEnum ||
                     CheckGenericType(checkType, typeof(AllDirectionStyleValue<>)) ||
                     checkType == typeof(ColorValue)
                     )
@@ -59,7 +59,7 @@ namespace Silk.NET.UI.Common
             }
         }
 
-        private static bool CheckGenericType(Type typeToCheck, Type baseType)
+        internal static bool CheckGenericType(Type typeToCheck, Type baseType)
         {
             return typeToCheck.IsGenericType && typeToCheck.GetGenericTypeDefinition() == baseType;
         }
@@ -85,9 +85,27 @@ namespace Silk.NET.UI.Common
             {
                 return new StringProperty(name, (string)value);
             }
+            else if (fieldType.IsEnum)
+            {
+                return new EnumProperty(name, fieldType, (int?)(int)value);
+            }
             else if (fieldType == typeof(ColorValue))
             {
-                return new ColorProperty(name, (ColorValue?)(string)value);
+                ColorValue? colorValue = null;
+                var valueType = value.GetType();
+
+                if (valueType == typeof(string))
+                    colorValue = (string)value;
+                else if (valueType == typeof(int))
+                    colorValue = (int)value;
+                else if (valueType == typeof(System.Drawing.Color))
+                    colorValue = (int)value;
+                else if (valueType == typeof(ColorValue))
+                    colorValue = (ColorValue)value;
+                else
+                    colorValue = (ColorValue?)value;
+
+                return new ColorProperty(name, colorValue);
             }
             else if (CheckGenericType(fieldType, typeof(AllDirectionStyleValue<>)))
             {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Silk.NET.UI.Common
@@ -25,7 +26,7 @@ namespace Silk.NET.UI.Common
         }
     }
 
-    public abstract class Component : Control
+    public abstract class Component : ContainerControl
     {
         private Template template;
         private Styles styles;
@@ -39,7 +40,8 @@ namespace Silk.NET.UI.Common
         internal override void InitView()
         {
             template.CreateFor(this);
-            styles.Apply(template, this);
+            template.Bind();
+            styles.Apply(this);
         }
 
         internal void DestroyView()
@@ -98,6 +100,30 @@ namespace Silk.NET.UI.Common
                 }
 
                 throw;
+            }
+        }
+
+        internal IEnumerable<Control> FindMatchingControls(Component searchRoot, Selector selector)
+        {
+            return FindMatchingControls(searchRoot, null, selector);
+        }
+
+        private IEnumerable<Control> FindMatchingControls(Component searchRoot, SelectorPathNode path, Selector selector)
+        {
+            path = new SelectorPathNode() { Prev = path, Control = searchRoot };
+
+            foreach (var control in Children)
+            {
+                if (control is Component)
+                {
+                    var component = control as Component;
+
+                    foreach (var subControl in component.FindMatchingControls(component, path, selector))
+                        yield return subControl;
+                }
+
+                if (selector.MatchControl(control, path))
+                    yield return control;
             }
         }
     }

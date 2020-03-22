@@ -22,25 +22,25 @@ namespace Silk.NET.UI.Common.Properties
         internal ColorProperty(string name, string initialValue = null)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
 
         internal ColorProperty(string name, int? initialValue = null)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
 
         internal ColorProperty(string name, Color? initialValue = null)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
 
         internal ColorProperty(string name, ColorValue? initialValue = null)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
     }
 }

@@ -1,8 +1,15 @@
-using System.Runtime.CompilerServices;
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Silk.NET.UI.Common
 {
+    public class SelectorPathNode
+    {
+        public SelectorPathNode Prev = null;
+        public Control Control = null;
+    }
+
     public abstract class Selector : IEquatable<Selector>
     {
         internal abstract int Priority { get; }
@@ -13,9 +20,9 @@ namespace Silk.NET.UI.Common
             Name = name ?? nameof(Selector);
         }
 
-        internal bool MatchControl(Control control) => Match(control);
+        internal bool MatchControl(Control control, SelectorPathNode path) => Match(control, path);
 
-        protected abstract bool Match(Control control);
+        protected abstract bool Match(Control control, SelectorPathNode path);
 
         public static Selector ForType(params Type[] type)
         {

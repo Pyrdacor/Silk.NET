@@ -14,7 +14,7 @@ namespace Silk.NET.UI.Common
             this.classes = new List<string>(classes);
         }
 
-        protected override bool Match(Control control)
+        protected override bool Match(Control control, SelectorPathNode path)
         {
             if (control.Classes.Count == 0)
                 return false;

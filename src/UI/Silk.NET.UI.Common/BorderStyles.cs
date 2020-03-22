@@ -50,7 +50,7 @@ namespace Silk.NET.UI.Common
         [DefaultValue(BorderLineStyle.None)]
         public AllDirectionStyleValue<BorderLineStyle>? LineStyle;
         [DefaultValue("#000000")]
-        public AllDirectionStyleValue<Color>? Color;
+        public AllDirectionStyleValue<ColorValue>? Color;
     }
 
     public struct BorderSideStyle
