@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\OpenGL\Silk.NET.OpenGL\Silk.NET.OpenGL.csproj" />
+  </ItemGroup>
+</Project>

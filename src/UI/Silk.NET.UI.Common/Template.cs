@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     using Dynamic;
 

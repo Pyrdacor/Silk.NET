@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public struct BackgroundStyle
     {

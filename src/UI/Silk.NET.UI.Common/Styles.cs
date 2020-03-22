@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public abstract class Styles
     {

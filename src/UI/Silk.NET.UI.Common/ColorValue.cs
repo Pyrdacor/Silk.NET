@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     /// <summary>
     /// Color value for styling.

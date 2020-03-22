@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class TemplateAttribute : Attribute

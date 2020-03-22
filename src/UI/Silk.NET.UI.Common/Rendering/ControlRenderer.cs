@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public class ControlRenderer
     {

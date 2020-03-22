@@ -1,6 +1,6 @@
 using System.Collections.Specialized;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public abstract class ContainerControl : Control
     {

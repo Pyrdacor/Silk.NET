@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public class RenderEventArgs : EventArgs
     {

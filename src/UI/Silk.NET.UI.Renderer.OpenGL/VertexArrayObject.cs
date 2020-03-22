@@ -1,0 +1,230 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+
+namespace Silk.NET.UI.Renderer.OpenGL
+{
+	// VAO
+    internal class VertexArrayObject : IDisposable
+    {
+    	uint index = 0;
+        readonly Dictionary<string, PositionBuffer> positionBuffers = new Dictionary<string, PositionBuffer>(4);
+        readonly Dictionary<string, ColorBuffer> colorBuffers = new Dictionary<string, ColorBuffer>(4);
+        readonly Dictionary<string, LayerBuffer> layerBuffers = new Dictionary<string, LayerBuffer>(1);
+        readonly Dictionary<string, IndexBuffer> indexBuffers = new Dictionary<string, IndexBuffer>(4);
+        readonly Dictionary<string, int> bufferLocations = new Dictionary<string, int>();
+        bool disposed = false;
+        bool buffersAreBound = false;
+        ShaderProgram program = null;
+        object vaoLock = new object();
+
+        public static VertexArrayObject ActiveVAO { get; private set; } = null;
+
+        public VertexArrayObject(ShaderProgram program)
+        {
+            this.program = program;
+
+        	Create();
+        }
+
+        void Create()
+        {
+            index = State.Gl.GenVertexArray();
+        }
+
+        public void Lock()
+        {
+            Monitor.Enter(vaoLock);
+        }
+
+        public void Unlock()
+        {
+            Monitor.Exit(vaoLock);
+        }
+
+        public void AddBuffer(string name, PositionBuffer buffer)
+        {
+            positionBuffers.Add(name, buffer);
+        }
+
+        public void AddBuffer(string name, ColorBuffer buffer)
+        {
+            colorBuffers.Add(name, buffer);
+        }
+
+        public void AddBuffer(string name, LayerBuffer buffer)
+        {
+            layerBuffers.Add(name, buffer);
+        }
+
+        public void AddBuffer(string name, IndexBuffer buffer)
+        {
+            indexBuffers.Add(name, buffer);
+        }
+
+        public void BindBuffers()
+        {
+            if (buffersAreBound)
+                return;
+
+            lock (vaoLock)
+            {
+                program.Use();
+                InternalBind(true);
+
+                foreach (var buffer in positionBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
+
+                foreach (var buffer in colorBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
+
+                foreach (var buffer in layerBuffers)
+                {
+                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                }
+
+                foreach (var buffer in indexBuffers)
+                {
+                    buffer.Value.Bind();
+                }
+
+                buffersAreBound = true;
+            }
+        }
+
+        public void UnbindBuffers()
+        {
+            if (!buffersAreBound)
+                return;
+
+            lock (vaoLock)
+            {
+                program.Use();
+                InternalBind(true);
+
+                foreach (var buffer in positionBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
+
+                foreach (var buffer in colorBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
+
+                foreach (var buffer in layerBuffers)
+                {
+                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
+                    bufferLocations[buffer.Key] = -1;
+                }
+
+                foreach (var buffer in indexBuffers)
+                {
+                    buffer.Value.Unbind();
+                }
+
+                buffersAreBound = false;
+            }
+        }
+
+        public void Bind()
+        {
+            InternalBind(false);
+        }
+
+        void InternalBind(bool bindOnly)
+        {
+            lock (vaoLock)
+            {
+                if (ActiveVAO != this)
+                {
+                    State.Gl.BindVertexArray(index);
+                    program.Use();
+                }
+
+                if (!bindOnly)
+                {
+                    bool buffersChanged = false;
+
+                    // ensure that all buffers are up to date
+                    foreach (var buffer in positionBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in colorBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in layerBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    foreach (var buffer in indexBuffers)
+                    {
+                        if (buffer.Value.RecreateUnbound())
+                            buffersChanged = true;
+                    }
+
+                    if (buffersChanged)
+                    {
+                        UnbindBuffers();
+                        BindBuffers();
+                    }
+                }
+
+                ActiveVAO = this;
+            }
+        }
+
+        public static void Bind(VertexArrayObject vao)
+        {
+            if (vao != null)
+            	vao.Bind();
+            else
+            	Unbind();
+        }
+
+        public static void Unbind()
+        {
+            State.Gl.BindVertexArray(0);
+            ActiveVAO = null;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    if (index != 0)
+                    {
+                    	if (ActiveVAO == this)
+                    		Unbind();
+
+                        State.Gl.DeleteVertexArray(index);
+                        index = 0;
+                    }
+
+                    disposed = true;
+                }
+            }
+        }
+   	}
+}

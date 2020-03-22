@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     internal class ClassSelector : Selector
     {

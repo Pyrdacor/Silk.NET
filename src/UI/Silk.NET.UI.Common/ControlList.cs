@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public sealed class ControlList : IList<Control>, INotifyCollectionChanged
     {

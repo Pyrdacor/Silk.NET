@@ -1,6 +1,6 @@
 using System.Drawing;
 
-namespace Silk.NET.UI.Common.Properties
+namespace Silk.NET.UI.Properties
 {
     public class ColorProperty : ControlProperty<ColorValue?>
     {

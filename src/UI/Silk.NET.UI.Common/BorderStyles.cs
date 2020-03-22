@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Drawing;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public enum BorderLineStyle
     {

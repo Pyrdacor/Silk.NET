@@ -1,4 +1,4 @@
-namespace Silk.NET.UI.Common.Dynamic
+namespace Silk.NET.UI.Dynamic
 {
     internal class ConditionalComponentBinder : ComponentBinder
     {

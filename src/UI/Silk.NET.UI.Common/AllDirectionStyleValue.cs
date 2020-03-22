@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public struct AllDirectionStyleValue<T> : IEquatable<AllDirectionStyleValue<T>> where T : struct
     {

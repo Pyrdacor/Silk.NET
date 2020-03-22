@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Common.Properties
+namespace Silk.NET.UI.Properties
 {
     public class AllDirectionProperty<T> : ControlProperty<AllDirectionStyleValue<T>?> where T : struct
     {

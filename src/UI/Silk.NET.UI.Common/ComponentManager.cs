@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     public static class ComponentManager
     {

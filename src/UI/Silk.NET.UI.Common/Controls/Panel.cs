@@ -1,4 +1,4 @@
-namespace Silk.NET.UI.Common.Controls
+namespace Silk.NET.UI.Controls
 {
     /// <summary>
     /// Most basic control which is only

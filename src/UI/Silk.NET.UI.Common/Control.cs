@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace Silk.NET.UI.Common
+namespace Silk.NET.UI
 {
     using Properties;
 

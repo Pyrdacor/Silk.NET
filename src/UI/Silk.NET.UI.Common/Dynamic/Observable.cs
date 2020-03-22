@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Common.Dynamic
+namespace Silk.NET.UI.Dynamic
 {
     public abstract class Observable<T>
     {
