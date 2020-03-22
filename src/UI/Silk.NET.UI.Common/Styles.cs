@@ -8,7 +8,7 @@ namespace Silk.NET.UI.Common
     {
         private readonly Dictionary<Selector, Style> styles = new Dictionary<Selector, Style>();
 
-        public void Add(Selector selector, Style style)
+        protected void Add(Selector selector, Style style)
         {
             // styles that are set later with the same selector will override previous styles
             if (styles.ContainsKey(selector))

@@ -6,26 +6,26 @@ namespace Silk.NET.UI.Common
     {
         #region Background
 
-        public BackgroundStyle Background;
+        public BackgroundStyle? Background;
         [DefaultValue("#ffffff")] // TODO
-        public ColorValue BackgroundColor;
+        public ColorValue? BackgroundColor;
 
         #endregion
 
 
         #region Border
 
-        public BorderStyle Border;
-        public BorderSideStyle BorderTop;
-        public BorderSideStyle BorderRight;
-        public BorderSideStyle BorderBottom;
-        public BorderSideStyle BorderLeft;
+        public BorderStyle? Border;
+        public BorderSideStyle? BorderTop;
+        public BorderSideStyle? BorderRight;
+        public BorderSideStyle? BorderBottom;
+        public BorderSideStyle? BorderLeft;
         [DefaultValue(0)]
-        public AllDirectionStyleValue<int> BorderSize;
+        public AllDirectionStyleValue<int>? BorderSize;
         [DefaultValue(Common.BorderLineStyle.None)]
-        public AllDirectionStyleValue<BorderLineStyle> BorderLineStyle;
+        public AllDirectionStyleValue<BorderLineStyle>? BorderLineStyle;
         [DefaultValue("#000000")]
-        public AllDirectionStyleValue<ColorValue> BorderColor;
+        public AllDirectionStyleValue<ColorValue>? BorderColor;
 
         #endregion
     }

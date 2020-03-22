@@ -7,7 +7,7 @@ namespace Silk.NET.UI.Common.Dynamic
     internal class MultipleComponentBinder<T> : ComponentBinder
     {
         private Observable<IEnumerable<T>> values;
-        private List<Component> boundComponents;
+        private readonly List<Component> boundComponents = new List<Component>();
         private string componentTypeName;
         private Func<T, string> componentIdProvider;
 

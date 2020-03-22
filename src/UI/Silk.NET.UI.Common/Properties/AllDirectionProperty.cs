@@ -19,34 +19,58 @@ namespace Silk.NET.UI.Common.Properties
             }
         }
 
-        internal AllDirectionProperty(string name, string initialValue = null)
+        internal AllDirectionProperty(string name)
             : base(name)
         {
-            Value = initialValue;
+
         }
 
-        internal AllDirectionProperty(string name, T? initialValue = null)
+        internal AllDirectionProperty(string name, AllDirectionStyleValue<T>? initialValue)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
 
-        internal AllDirectionProperty(string name, Tuple<T, T>? initialValue = null)
+        internal AllDirectionProperty(string name, AllDirectionStyleValue<T> initialValue)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
 
-        internal AllDirectionProperty(string name, Tuple<T, T, T>? initialValue = null)
+        internal AllDirectionProperty(string name, string initialValue)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
         }
 
-        internal AllDirectionProperty(string name, Tuple<T, T, T, T>? initialValue = null)
+        internal AllDirectionProperty(string name, T? initialValue)
             : base(name)
         {
-            Value = initialValue;
+            value = initialValue;
+        }
+
+        internal AllDirectionProperty(string name, T initialValue)
+            : base(name)
+        {
+            value = initialValue;
+        }
+
+        internal AllDirectionProperty(string name, Tuple<T, T> initialValue)
+            : base(name)
+        {
+            value = initialValue;
+        }
+
+        internal AllDirectionProperty(string name, Tuple<T, T, T> initialValue)
+            : base(name)
+        {
+            value = initialValue;
+        }
+
+        internal AllDirectionProperty(string name, Tuple<T, T, T, T> initialValue)
+            : base(name)
+        {
+            value = initialValue;
         }
     }
 }

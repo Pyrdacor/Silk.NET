@@ -1,6 +1,6 @@
-using System.ComponentModel;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace Silk.NET.UI.Common
@@ -24,10 +24,16 @@ namespace Silk.NET.UI.Common
             foreach (var field in type.GetFields())
             {
                 var fieldType = field.FieldType;
+                var checkType = fieldType;
 
-                if (fieldType.IsPrimitive || !fieldType.IsEnum ||
-                    fieldType == typeof(AllDirectionStyleValue<>) ||
-                    fieldType == typeof(ColorValue)
+                if (CheckGenericType(fieldType, typeof(Nullable<>)))
+                {
+                    checkType = fieldType.GenericTypeArguments[0];
+                }
+
+                if (checkType.IsPrimitive || !checkType.IsEnum ||
+                    CheckGenericType(checkType, typeof(AllDirectionStyleValue<>)) ||
+                    checkType == typeof(ColorValue)
                     )
                 {
                     var defaultValueAttribute = field.GetCustomAttribute(typeof(DefaultValueAttribute));
@@ -41,24 +47,39 @@ namespace Silk.NET.UI.Common
                         defaultValue = null;
                     
                     string name = prefix + field.Name;
-                    DefaultStyleProperties.Add(name, CreateProperty(name, fieldType, defaultValue));
+                    var property = CreateProperty(name, fieldType, defaultValue);
+
+                    if (property != null)
+                        DefaultStyleProperties.Add(name, property);
                 }
                 else
                 {
-                    GetDefaultStylesFromType(prefix + field.Name + ".", fieldType);
+                    GetDefaultStylesFromType(prefix + field.Name + ".", checkType);
                 }
             }
         }
 
+        private static bool CheckGenericType(Type typeToCheck, Type baseType)
+        {
+            return typeToCheck.IsGenericType && typeToCheck.GetGenericTypeDefinition() == baseType;
+        }
+
         private static IControlProperty CreateProperty(string name, Type fieldType, object value)
         {
-            if (fieldType == typeof(int))
+            if (value == null)
+                return null;
+
+            if (CheckGenericType(fieldType, typeof(Nullable<>)))
             {
-                return new IntProperty(name, (int?)value);
+                return CreateProperty(name, fieldType.GenericTypeArguments[0], value);
+            }
+            else if (fieldType == typeof(int))
+            {
+                return new IntProperty(name, (int?)(int)value);
             }
             else if (fieldType == typeof(bool))
             {
-                return new BoolProperty(name, (bool?)value);
+                return new BoolProperty(name, (bool?)(bool)value);
             }
             else if (fieldType == typeof(string))
             {
@@ -66,14 +87,14 @@ namespace Silk.NET.UI.Common
             }
             else if (fieldType == typeof(ColorValue))
             {
-                return new ColorProperty(name, (ColorValue?)value);
+                return new ColorProperty(name, (ColorValue?)(string)value);
             }
-            else if (fieldType == typeof(AllDirectionStyleValue<>))
+            else if (CheckGenericType(fieldType, typeof(AllDirectionStyleValue<>)))
             {
                 Type propertyBaseType = typeof(AllDirectionProperty<>);
-                Type[] typeArgs = { fieldType };
+                Type[] typeArgs = { fieldType.GenericTypeArguments[0] };
                 var propertyType = propertyBaseType.MakeGenericType(typeArgs);
-                return (IControlProperty)Activator.CreateInstance(propertyType, new object[] { value });
+                return (IControlProperty)Activator.CreateInstance(propertyType, BindingFlags.NonPublic | BindingFlags.Instance, null, new object[] { name, value }, null);
             }
             else
             {
@@ -102,7 +123,12 @@ namespace Silk.NET.UI.Common
         internal void SetProperty(string name, object value)
         {
             if (!styleProperties.ContainsKey(name)) // only set once
-                styleProperties.Add(name, CreateProperty(name, value.GetType(), value));
+            {
+                var property = CreateProperty(name, value.GetType(), value);
+
+                if (property != null)
+                    styleProperties.Add(name, property);
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Silk.NET.UI.Common
                 throw new ArgumentException($"The given type is not a subclass of `{nameof(RootComponent)}`.");
 
             IControlRenderer controlRenderer = null; // TODO: get it from somewhere
-            var rootComponent = (RootComponent)Activator.CreateInstance(rootComponentType);
+            var rootComponent = Component.Create(rootComponentType, null, true) as RootComponent;
             rootComponent.SetControlRenderer(controlRenderer);
 
             // find and register all component types
@@ -43,7 +43,7 @@ namespace Silk.NET.UI.Common
         internal static Component InitializeComponent(string name, string id)
         {
             if (componentTypesByFullName.ContainsKey(name))
-                return Component.Create(componentTypesByFullName[name], id);
+                return Component.Create(componentTypesByFullName[name], id, false);
 
             if (!componentTypesByName.ContainsKey(name))
                 throw new ArgumentException($"Unknown component {name}.");
@@ -53,7 +53,7 @@ namespace Silk.NET.UI.Common
             if (possibleTypes.Count != 1) // TODO: add the fully qualified names into the message
                 throw new ArgumentException($"Component with type name {name} exists more than once. Specify it with fully qualified name.");
 
-            return Component.Create(componentTypesByFullName[possibleTypes[0]], id);
+            return Component.Create(componentTypesByFullName[possibleTypes[0]], id, false);
         }
 
         private static void Loop(Component rootComponent)

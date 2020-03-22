@@ -47,7 +47,7 @@ namespace Silk.NET.UI.Common
             // TODO ?
         }
 
-        internal static Component Create(Type type, string id)
+        internal static Component Create(Type type, string id, bool root)
         {
             var templateAttribute = type.GetCustomAttribute(typeof(TemplateAttribute), false);
 
@@ -67,7 +67,7 @@ namespace Silk.NET.UI.Common
             if (!stylesType.IsSubclassOf(typeof(Styles)))
                 throw new InvalidOperationException($"Component styles type {stylesType.Name} is not derived from class `Styles`.");
 
-            var component = TryTypeCreation<Component>(type);
+            Component component = root ? TryTypeCreation<RootComponent>(type) : TryTypeCreation<Component>(type);
 
             if (component == null)
                 throw new InvalidOperationException($"Type {type.Name} is not derived from class `Component`.");

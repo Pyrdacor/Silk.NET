@@ -133,10 +133,19 @@ namespace Silk.NET.UI.Common
                 }
                 else if (match.Groups.Count >= 2 && !string.IsNullOrEmpty(match.Groups[1].Value))
                 {
-                    return new AllDirectionStyleValue<T>
-                    (
-                        (T)Convert.ChangeType(match.Groups[1].Value, typeof(T))
-                    );
+                    try
+                    {
+                        return new AllDirectionStyleValue<T>
+                        (
+                            (T)Convert.ChangeType(match.Groups[1].Value, typeof(T))
+                        );
+                    }
+                    catch (InvalidCastException)
+                    {
+                        // try to convert string to the underlying type T
+                        if (typeof(T) == typeof(ColorValue))
+                            return new AllDirectionStyleValue<T>((T)(object)(ColorValue)value);
+                    }
                 }
             }
             

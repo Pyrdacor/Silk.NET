@@ -16,7 +16,22 @@ namespace Silk.NET.UI.Test
         }
     }
 
-    class MyComponent : Component
+    class MyStyles : Styles
+    {
+        public MyStyles()
+        {
+            Add(Selector.ForId("foo"), new Style()
+            {
+                Background = new BackgroundStyle {
+                    Color = "#ff00ff"
+                },
+            });
+        }
+    }
+
+    [Template(typeof(MyTemplate))]
+    [Styles(typeof(MyStyles))]
+    class MyComponent : RootComponent
     {
         
     }
@@ -25,7 +40,7 @@ namespace Silk.NET.UI.Test
     {
         static void Main(string[] args)
         {
-            
+            ComponentManager.Run(typeof(MyComponent));
         }
     }
 }
