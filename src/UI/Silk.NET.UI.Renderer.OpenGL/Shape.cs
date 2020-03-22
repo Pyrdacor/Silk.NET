@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Net.Http.Headers;
+using System.Drawing;
+
 namespace Silk.NET.UI.Renderer.OpenGL
 {
     /// <summary>
     /// A shape is a colored polygon.
     /// </summary>
-    public class Shape : RenderNode
+    internal class Shape : RenderNode
     {
         public enum Type
         {
@@ -31,8 +32,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
         Type type = Type.Triangle;
         Point[] points;
 
-        private Shape(Type type, Rect virtualScreen, params Point[] points)
-            : base(LayerShape.Polygon, CalculateWidth(type, points), CalculateHeight(type, points), virtualScreen)
+        private Shape(Type type, RenderDimensionReference renderDimensionReference, params Point[] points)
+            : base(LayerShape.Polygon, CalculateWidth(type, points), CalculateHeight(type, points), renderDimensionReference)
         {
             this.points = points;
             numVertices = type switch
@@ -44,19 +45,19 @@ namespace Silk.NET.UI.Renderer.OpenGL
             };
         }
 
-        public Shape CreateTriangle(Rect virtualScreen, Point p1, Point p2, Point p3)
+        public Shape CreateTriangle(RenderDimensionReference renderDimensionReference, Point p1, Point p2, Point p3)
         {
-            return new Shape(Type.Triangle, virtualScreen, p1, p2, p3 );
+            return new Shape(Type.Triangle, renderDimensionReference, p1, p2, p3 );
         }
 
-        public Shape CreateEllipse(Rect virtualScreen, int width, int height)
+        public Shape CreateEllipse(RenderDimensionReference renderDimensionReference, int width, int height)
         {
-            return new Shape(Type.Ellipse, virtualScreen, new Point(width, height));
+            return new Shape(Type.Ellipse, renderDimensionReference, new Point(width, height));
         }
 
-        public Shape CreateRoundRect(Rect virtualScreen, int width, int height)
+        public Shape CreateRoundRect(RenderDimensionReference renderDimensionReference, int width, int height)
         {
-            return new Shape(Type.RoundRect, virtualScreen, new Point(width, height));
+            return new Shape(Type.RoundRect, renderDimensionReference, new Point(width, height));
         }
 
         private static int CalculateWidth(Type type, Point[] points)
@@ -115,7 +116,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 Layer.UpdatePosition(drawIndex.Value, this);
         }
 
-        public virtual void Resize(int width, int height)
+        public override void Resize(int width, int height)
         {
             if (Width == width && Height == height)
                 return;

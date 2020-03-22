@@ -1,19 +1,27 @@
-﻿namespace Silk.NET.UI.Renderer.OpenGL
+﻿using System.Drawing;
+
+namespace Silk.NET.UI.Renderer.OpenGL
 {
     /// <summary>
-    /// A sprite has a fixed size and an offset into the layer's texture atlas.
+    /// A sprite has a fixed size and an offset into the layer's texture atlas or no texture at all.
     /// The layer will sort sprites by size and then by the texture atlas offset.
     /// </summary>
-    public class Sprite : RenderNode
+    internal class Sprite : RenderNode
     {
         protected int? drawIndex = null;
         Point textureAtlasOffset = null;
         byte displayLayer = 0;
 
-        public Sprite(int width, int height, int textureAtlasX, int textureAtlasY, Rect virtualScreen)
-            : base(Shape.Rect, width, height, virtualScreen)
+        public Sprite(int width, int height, int textureAtlasX, int textureAtlasY, RenderDimensionReference renderDimensionReference)
+            : base(Shape.Rect, width, height, renderDimensionReference)
         {
             textureAtlasOffset = new Point(textureAtlasX, textureAtlasY);
+        }
+
+        public Sprite(int width, int height, RenderDimensionReference renderDimensionReference)
+            : base(Shape.Rect, width, height, renderDimensionReference)
+        {
+
         }
 
         public Point TextureAtlasOffset
@@ -44,7 +52,7 @@
             }
         }
 
-        protected virtual void AddToLayer()
+        protected override void AddToLayer()
         {
             drawIndex = Layer.GetDrawIndex(this);
         }
@@ -92,7 +100,7 @@
             UpdateTextureAtlasOffset();
         }
 
-        protected virtual void UpdateDisplayLayer()
+        protected override void UpdateDisplayLayer()
         {
             if (drawIndex.HasValue)
                 Layer.UpdateDisplayLayer(drawIndex.Value, displayLayer);

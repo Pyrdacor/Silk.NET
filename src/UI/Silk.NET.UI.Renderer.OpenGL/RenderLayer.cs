@@ -7,7 +7,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
     public delegate Point PositionTransformation(Point position);
     public delegate Size SizeTransformation(Size size);
 
-    public enum Layer
+    internal enum Layer
     {
         None,
         Controls, // controls (colors only)
@@ -15,23 +15,23 @@ namespace Silk.NET.UI.Renderer.OpenGL
         Shapes, // colored shapes / custom drawings
     }
 
-    public enum LayerShape
+    internal enum LayerShape
     {
         Rect,
         Polygon
     }
 
-    public class RenderLayer : IDisposable
+    internal class RenderLayer : IDisposable
     {
         public Layer Layer { get; } = Layer.None;
 
-        public Color ColorKey
+        public Color? ColorKey
         {
             get;
             set;
         } = null;
 
-        public Color ColorOverlay
+        public Color? ColorOverlay
         {
             get;
             set;
@@ -60,7 +60,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         readonly int layerIndex = 0;
         bool disposed = false;
 
-        public RenderLayer(Layer layer, Texture texture, Render.Color colorKey = null, Render.Color colorOverlay = null)
+        public RenderLayer(Layer layer, Texture texture, Color? colorKey = null, Color? colorOverlay = null)
         {
             renderBuffer = new RenderBuffer(layer == Layer.Shapes ? LayerShape.Polygon : LayerShape.Rect, layer == Layer.Images);
 
@@ -115,9 +115,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             renderBuffer.Render();
         }
 
-        public int GetDrawIndex(ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public int GetDrawIndex(Sprite sprite)
         {
-            return renderBuffer.GetDrawIndex(sprite, PositionTransformation, SizeTransformation, maskSpriteTextureAtlasOffset);
+            return renderBuffer.GetDrawIndex(sprite, PositionTransformation, SizeTransformation);
         }
 
         public void FreeDrawIndex(int index)
@@ -125,44 +125,19 @@ namespace Silk.NET.UI.Renderer.OpenGL
             renderBuffer.FreeDrawIndex(index);
         }
 
-        public void UpdatePosition(int index, ISprite sprite)
+        public void UpdatePosition(int index, Sprite sprite)
         {
-            renderBuffer.UpdatePosition(index, sprite, sprite.BaseLineOffset, PositionTransformation, SizeTransformation);
+            renderBuffer.UpdatePosition(index, sprite, PositionTransformation, SizeTransformation);
         }
 
-        public void UpdateTextureAtlasOffset(int index, ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public void UpdateTextureAtlasOffset(int index, Sprite sprite)
         {
-            renderBuffer.UpdateTextureAtlasOffset(index, sprite, maskSpriteTextureAtlasOffset);
+            renderBuffer.UpdateTextureAtlasOffset(index, sprite);
         }
 
         public void UpdateDisplayLayer(int index, byte displayLayer)
         {
             renderBuffer.UpdateDisplayLayer(index, displayLayer);
-        }
-
-        public int GetColoredRectDrawIndex(ColoredRect coloredRect)
-        {
-            return renderBufferColorRects.GetDrawIndex(coloredRect, PositionTransformation, SizeTransformation);
-        }
-
-        public void FreeColoredRectDrawIndex(int index)
-        {
-            renderBufferColorRects.FreeDrawIndex(index);
-        }
-
-        public void UpdateColoredRectPosition(int index, ColoredRect coloredRect)
-        {
-            renderBufferColorRects.UpdatePosition(index, coloredRect, 0, PositionTransformation, SizeTransformation);
-        }
-
-        public void UpdateColoredRectColor(int index, Render.Color color)
-        {
-            renderBufferColorRects.UpdateColor(index, color);
-        }
-
-        public void UpdateColoredRectDisplayLayer(int index, byte displayLayer)
-        {
-            renderBufferColorRects.UpdateDisplayLayer(index, displayLayer);
         }
 
         public void TestNode(RenderNode node)
@@ -183,26 +158,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 if (disposing)
                 {
                     renderBuffer?.Dispose();
-                    renderBufferColorRects?.Dispose();
                     texture?.Dispose();
                     Visible = false;
-
                     disposed = true;
                 }
-            }
-        }
-    }
-
-    public class RenderLayerFactory
-    {
-        public RenderLayer Create(Layer layer, Texture texture, Color colorKey = null, Color colorOverlay = null)
-        {
-            switch (layer)
-            {
-                case Layer.None:
-                    throw new InvalidOperationException($"Cannot create render layer for layer {Enum.GetName(typeof(Layer), layer)}");
-                default:
-                    return new RenderLayer(layer, texture, colorKey, colorOverlay);
             }
         }
     }

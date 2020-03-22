@@ -4,16 +4,16 @@ using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
-    public class Context
+    internal class Context
     {
         int width = -1;
         int height = -1;
         Rotation rotation = Rotation.None;
-        Matrix4x4 modelViewMatrix = Matrix4.Identity;
-        Matrix4x4 unzoomedModelViewMatrix = Matrix4.Identity;
+        Matrix4x4 modelViewMatrix = Matrix4x4.Identity;
+        Matrix4x4 unzoomedModelViewMatrix = Matrix4x4.Identity;
         float zoom = 0.0f;
 
-        public Context(int width, int height)
+        public Context(RenderDimensionReference dimensions)
         {
             // TODO: maybe support earlier versions later?
             // We need at least OpenGL 3.1 for instancing and shaders
@@ -29,15 +29,17 @@ namespace Silk.NET.UI.Renderer.OpenGL
             State.Gl.BlendEquationSeparate(BlendEquationModeEXT.FuncAdd, BlendEquationModeEXT.FuncAdd);
             State.Gl.BlendFuncSeparate(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha, BlendingFactor.One, BlendingFactor.Zero);
 
-            Resize(width, height);
+            Resize(dimensions.Width, dimensions.Height);
+
+            dimensions.DimensionsChanged += () => Resize(dimensions.Width, dimensions.Height);
         }
 
         public void Resize(int width, int height)
         {
             State.ClearMatrices();
-            State.PushModelViewMatrix(Matrix4.Identity);
-            State.PushUnzoomedModelViewMatrix(Matrix4.Identity);
-            State.PushProjectionMatrix(Matrix4.CreateOrtho2D(0, width, 0, height, 0, 1));
+            State.PushModelViewMatrix(Matrix4x4.Identity);
+            State.PushUnzoomedModelViewMatrix(Matrix4x4.Identity);
+            State.PushProjectionMatrix(Matrix4x4.CreateOrtho2D(0, width, 0, height, 0, 1));
 
             this.width = width;
             this.height = height;

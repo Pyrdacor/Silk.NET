@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Drawing;
 using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
-    public class RenderBuffer : IDisposable
+    internal class RenderBuffer : IDisposable
     {
         bool disposed = false;
 
@@ -167,7 +168,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
         }
 
-        public void UpdateTextureAtlasOffset(int index, Render.ISprite sprite, Position maskSpriteTextureAtlasOffset = null)
+        public void UpdateTextureAtlasOffset(int index, Sprite sprite)
         {
             if (textureAtlasOffsetBuffer == null)
                 return;
@@ -176,17 +177,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             textureAtlasOffsetBuffer.Update(index + 1, (short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y);
             textureAtlasOffsetBuffer.Update(index + 2, (short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
             textureAtlasOffsetBuffer.Update(index + 3, (short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
-
-            if (Masked && maskSpriteTextureAtlasOffset != null)
-            {
-                maskTextureAtlasOffsetBuffer.Update(index, (short)maskSpriteTextureAtlasOffset.X, (short)maskSpriteTextureAtlasOffset.Y);
-                maskTextureAtlasOffsetBuffer.Update(index + 1, (short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)maskSpriteTextureAtlasOffset.Y);
-                maskTextureAtlasOffsetBuffer.Update(index + 2, (short)(maskSpriteTextureAtlasOffset.X + sprite.Width), (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
-                maskTextureAtlasOffsetBuffer.Update(index + 3, (short)maskSpriteTextureAtlasOffset.X, (short)(maskSpriteTextureAtlasOffset.Y + sprite.Height));
-            }
         }
 
-        public void UpdateColor(int index, Render.Color color)
+        public void UpdateColor(int index, Color color)
         {
             if (colorBuffer != null)
             {

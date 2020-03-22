@@ -78,7 +78,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return index;
         }
 
-        public void Update(int index, Render.Color color)
+        public void Update(int index, Color color)
         {
             int bufferIndex = index * 4;
 

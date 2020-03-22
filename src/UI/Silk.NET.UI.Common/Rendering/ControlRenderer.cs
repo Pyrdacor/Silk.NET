@@ -21,6 +21,7 @@ namespace Silk.NET.UI
         {
             lastRenderObjects = new List<int>(currentRenderObjects);
             currentRenderObjects.Clear();
+            renderer.StartRenderCycle();
         }
 
         internal void Render()
@@ -30,6 +31,8 @@ namespace Silk.NET.UI
             {
                 renderer.RemoveRenderObject(removedRenderObject);
             }
+
+            renderer.EndRenderCycle();
         }
 
         private int RunDrawCall(int? reference, Func<int> drawActionWrapper)
@@ -49,9 +52,9 @@ namespace Silk.NET.UI
             return renderObjectIndex;
         }
 
-        public int DrawRectangle(int? reference, int x, int y, int width, int height, Color color)
+        public int DrawRectangle(int? reference, int x, int y, int width, int height, Color color, int lineSize)
         {
-            return RunDrawCall(reference, () => renderer.DrawRectangle(x, y, width, height, color));
+            return RunDrawCall(reference, () => renderer.DrawRectangle(x, y, width, height, color, lineSize));
         }
 
         public int FillRectangle(int? reference, int x, int y, int width, int height, Color color)

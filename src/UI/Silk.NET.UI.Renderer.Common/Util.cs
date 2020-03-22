@@ -81,7 +81,7 @@ namespace Silk.NET.UI.Renderer
         {
             var distX = p2.X - p1.X;
             var distY = p2.Y - p1.Y;
-            return Math.Sqrt(distX * distX + distY * distY);
+            return (float)Math.Sqrt(distX * distX + distY * distY);
         }
     }
 }

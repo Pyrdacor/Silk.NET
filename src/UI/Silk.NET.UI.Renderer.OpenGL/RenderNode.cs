@@ -3,7 +3,12 @@ using System.Drawing;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
-    public abstract class RenderNode : IRenderNode
+    internal interface IRenderNode
+    {
+        void Delete();
+    }
+
+    internal abstract class RenderNode : IRenderNode
     {
         int x = short.MaxValue;
         int y = short.MaxValue;
@@ -12,14 +17,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
         bool visibleRequest = false;
         bool deleted = false;
         bool notOnScreen = true;
-        readonly Rect virtualScreen = null;
+        readonly RenderDimensionReference renderDimensionReference = null;
 
-        protected Node(LayerShape shape, int width, int height, Rect virtualScreen)
+        protected RenderNode(LayerShape shape, int width, int height, RenderDimensionReference renderDimensionReference)
         {
             Shape = shape;
             Width = width;
             Height = height;
-            this.virtualScreen = virtualScreen;
+            this.renderDimensionReference = renderDimensionReference;
         }
 
         public LayerShape Shape { get; } = LayerShape.Rect;
@@ -134,7 +139,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return false;
         }
 
-        public void Delete()
+        public virtual void Delete()
         {
             if (!deleted)
             {
