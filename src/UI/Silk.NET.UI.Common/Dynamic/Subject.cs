@@ -1,16 +1,24 @@
 using System;
 
-namespace Silk.NET.UI.Dynamic
+namespace Silk.NET.UI
 {
     /// <summary>
     /// Subject which provides a value by using its
     /// <see cref="Next"> method.
     /// </summary>
-    public class Subject<T> : Observable<T>, IObserver<T>
+    public class Subject<T> : Observable<T>, IObserver<T>, IObservableStatusProvider
     {
         protected T currentValue = default(T);
+        private Exception errorException = null;
         protected bool hasValue = false;
+        protected bool errored = false;
         protected bool completed = false;
+
+        internal T CurrentValue => currentValue;
+        internal Exception ErrorException => errorException;
+        bool IObservableStatusProvider.HasValue => hasValue;
+        bool IObservableStatusProvider.Errored => errored;
+        bool IObservableStatusProvider.Completed => completed;
 
         public virtual void Next(T value)
         {
@@ -20,7 +28,7 @@ namespace Silk.NET.UI.Dynamic
             currentValue = value;
             hasValue = true;
 
-            nextAction?.Invoke(currentValue);
+            CallNextActions(currentValue);
         }
 
         public virtual void Error(Exception error)
@@ -29,8 +37,10 @@ namespace Silk.NET.UI.Dynamic
                 return;
 
             hasValue = false;
+            errorException = error;
+            errored = true;
             completed = true;
-            errorAction?.Invoke(error);
+            CallErrorActions(error);
         }
 
         public virtual void Complete()
@@ -39,13 +49,18 @@ namespace Silk.NET.UI.Dynamic
                 return;
 
             completed = true;
-            completeAction?.Invoke();
+            CallCompleteActions();
         }
 
         public void CompleteWith(T value)
         {
             Next(value);
             Complete();
+        }
+
+        internal override Subject<T> AsSubject()
+        {
+            return this;
         }
     }
 }

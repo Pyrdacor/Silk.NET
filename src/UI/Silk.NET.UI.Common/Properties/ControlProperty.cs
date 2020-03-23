@@ -2,8 +2,6 @@ using System;
 
 namespace Silk.NET.UI.Properties
 {
-    using Dynamic;
-
     internal interface IControlProperty
     {
         string Name { get; }

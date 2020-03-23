@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Dynamic
+namespace Silk.NET.UI
 {
     /// <summary>
     /// Subject which has an initial value.
@@ -18,15 +18,20 @@ namespace Silk.NET.UI.Dynamic
             hasValue = true;
         }
 
-        public override void Subscribe(Action<T> next, Action<Exception> error = null, Action complete = null)
+        public override Subscription<T> Subscribe(Action<T> next, Action<Exception> error = null, Action complete = null)
         {
-            base.Subscribe(next, error, complete);
+            if (completed)
+                return Subscription<T>.Empty;
+
+            var subscription = base.Subscribe(next, error, complete);
 
             if (firstSubscription)
             {
                 firstSubscription = false;
-                nextAction?.Invoke(currentValue);
+                CallNextActions(currentValue);
             }
+
+            return subscription;
         }
     }
 }

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Silk.NET.UI.Dynamic
+namespace Silk.NET.UI
 {
     internal class MultipleComponentBinder<T> : ComponentBinder
     {

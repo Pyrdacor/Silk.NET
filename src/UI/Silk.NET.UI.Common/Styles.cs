@@ -45,7 +45,7 @@ namespace Silk.NET.UI
         {
             var type = parent.GetType();
 
-            if (ControlStyle.CheckGenericType(type, typeof(Nullable<>)))
+            if (Util.CheckGenericType(type, typeof(Nullable<>)))
                 type = type.GenericTypeArguments[0];
 
             int dotIndex = name.IndexOf(".");

@@ -1,4 +1,4 @@
-namespace Silk.NET.UI.Dynamic
+namespace Silk.NET.UI
 {
     internal abstract class ComponentBinder
     {

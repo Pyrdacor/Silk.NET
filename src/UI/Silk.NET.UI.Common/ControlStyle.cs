@@ -26,13 +26,13 @@ namespace Silk.NET.UI
                 var fieldType = field.FieldType;
                 var checkType = fieldType;
 
-                if (CheckGenericType(fieldType, typeof(Nullable<>)))
+                if (Util.CheckGenericType(fieldType, typeof(Nullable<>)))
                 {
                     checkType = fieldType.GenericTypeArguments[0];
                 }
 
                 if (checkType.IsPrimitive || checkType.IsEnum ||
-                    CheckGenericType(checkType, typeof(AllDirectionStyleValue<>)) ||
+                    Util.CheckGenericType(checkType, typeof(AllDirectionStyleValue<>)) ||
                     checkType == typeof(ColorValue)
                     )
                 {
@@ -59,17 +59,12 @@ namespace Silk.NET.UI
             }
         }
 
-        internal static bool CheckGenericType(Type typeToCheck, Type baseType)
-        {
-            return typeToCheck.IsGenericType && typeToCheck.GetGenericTypeDefinition() == baseType;
-        }
-
         private static IControlProperty CreateProperty(string name, Type fieldType, object value)
         {
             if (value == null)
                 return null;
 
-            if (CheckGenericType(fieldType, typeof(Nullable<>)))
+            if (Util.CheckGenericType(fieldType, typeof(Nullable<>)))
             {
                 return CreateProperty(name, fieldType.GenericTypeArguments[0], value);
             }
@@ -107,7 +102,7 @@ namespace Silk.NET.UI
 
                 return new ColorProperty(name, colorValue);
             }
-            else if (CheckGenericType(fieldType, typeof(AllDirectionStyleValue<>)))
+            else if (Util.CheckGenericType(fieldType, typeof(AllDirectionStyleValue<>)))
             {
                 Type propertyBaseType = typeof(AllDirectionProperty<>);
                 Type[] typeArgs = { fieldType.GenericTypeArguments[0] };

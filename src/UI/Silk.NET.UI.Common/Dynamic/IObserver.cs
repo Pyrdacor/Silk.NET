@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Dynamic
+namespace Silk.NET.UI
 {
     public interface IObserver<T>
     {

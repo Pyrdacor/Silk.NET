@@ -4,8 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace Silk.NET.UI
 {
-    using Dynamic;
-
     public abstract class Template
     {
         internal Component Component { get; private set; }
