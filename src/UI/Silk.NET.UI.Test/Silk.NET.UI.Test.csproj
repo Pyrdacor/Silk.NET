@@ -1,14 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <ItemGroup>
-    <ProjectReference Include="..\Silk.NET.UI.Common\Silk.NET.UI.Common.csproj" />
+    <ProjectReference Include="..\Silk.NET.UI.Common\Silk.NET.UI.Common.csproj"/>
+    <ProjectReference Include="..\..\Windowing\Silk.NET.Windowing.Desktop\Silk.NET.Windowing.Desktop.csproj"/>
+    <ProjectReference Include="..\Silk.NET.UI.Renderer.OpenGL\Silk.NET.UI.Renderer.OpenGL.csproj"/>
+    <ProjectReference Include="..\..\Windowing\Silk.NET.Windowing.Common\Silk.NET.Windowing.Common.csproj"/>
+    <ProjectReference Include="..\..\Windowing\Silk.NET.Windowing\Silk.NET.Windowing.csproj"/>
+    <ProjectReference Include="..\..\Windowing\Extensions\Silk.NET.Windowing.Extensions\Silk.NET.Windowing.Extensions.csproj"/>
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="glfw" Version="3.3.2"/>
+  </ItemGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
     <NullableContextOptions>enable</NullableContextOptions>
   </PropertyGroup>
-
 </Project>

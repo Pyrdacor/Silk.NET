@@ -1,4 +1,6 @@
-﻿using System;
+﻿using System.Drawing;
+using System;
+using Silk.NET.Windowing.Common;
 
 namespace Silk.NET.UI.Test
 {
@@ -44,6 +46,22 @@ namespace Silk.NET.UI.Test
         static void Main(string[] args)
         {
             ComponentManager.Run(typeof(MyComponent));
+
+            var window = Silk.NET.Windowing.Window.Create(WindowOptions.Default);
+            var dimensions = new Silk.NET.UI.Renderer.OpenGL.RenderDimensionReference();
+            dimensions.SetDimensions(window.Size.Width, window.Size.Height);
+            var controlRenderer = new Silk.NET.UI.Renderer.OpenGL.ControlRenderer(dimensions);
+
+            window.Render += (double foo) =>
+            {
+                window.MakeCurrent();
+                controlRenderer.StartRenderCycle();
+                controlRenderer.FillRectangle(100, 100, 200, 200, Color.Red);
+                controlRenderer.EndRenderCycle();
+                window.SwapBuffers();
+            };
+
+            window.Run();
         }
     }
 }
