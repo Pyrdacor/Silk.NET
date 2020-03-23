@@ -12,17 +12,16 @@ namespace Silk.NET.UI.Renderer.OpenGL
         None,
         Controls, // controls (colors only)
         Images, // images
-        Shapes, // colored shapes / custom drawings
-    }
-
-    internal enum LayerShape
-    {
-        Rect,
-        Polygon
+        Triangles, // colored triangle shapes / custom drawings
+        Ellipsis, // colored elliptic shapes / custom drawings
+        RoundRects, // colored rounded rect shapes / custom drawings
     }
 
     internal class RenderLayer : IDisposable
     {
+        private bool disposed = false;
+        private Texture texture = null;
+
         public Layer Layer { get; } = Layer.None;
 
         public Color? ColorKey
@@ -55,24 +54,40 @@ namespace Silk.NET.UI.Renderer.OpenGL
             set;
         } = null;
 
-        readonly RenderBuffer renderBuffer = null;
-        readonly Texture texture = null;
-        readonly int layerIndex = 0;
-        bool disposed = false;
+        public float Z
+        {
+            get;
+            set;
+        } = 0.0f;
 
+        readonly RenderBuffer renderBuffer = null;
         public RenderLayer(Layer layer, Texture texture, Color? colorKey = null, Color? colorOverlay = null)
         {
-            renderBuffer = new RenderBuffer(layer == Layer.Shapes ? LayerShape.Polygon : LayerShape.Rect, layer == Layer.Images);
+            if (layer == Layer.None)
+                throw new ArgumentException($"Layer `{nameof(Layer.None)}` can not be used as a type of real render layers.");
+
+            renderBuffer = new RenderBuffer(layer == Layer.Images,
+                layer switch
+                {
+                    Layer.Triangles => Shape.TriangleVertices,
+                    Layer.Ellipsis => Shape.EllipseVertices,
+                    Layer.RoundRects => Shape.RoundRectVertices,
+                    _ => 6 // 2 triangles with 3 vertices each
+                },
+                layer switch
+                {
+                    Layer.Ellipsis => PrimitiveType.TriangleFan,
+                    Layer.RoundRects => PrimitiveType.TriangleFan,
+                    _ => PrimitiveType.Triangles
+                });
 
             Layer = layer;
             this.texture = texture;
             ColorKey = colorKey;
             ColorOverlay = colorOverlay;
-            layerIndex = Misc.Round(Math.Log((int)layer, 2.0));
         }
 
-        /*bool SupportZoom =>
-            Layer != ...;*/
+        public bool SupportZoom => false; // TODO
 
         public void Render()
         {
@@ -92,24 +107,24 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 texture.Bind();
 
                 textureShader.SetAtlasSize((uint)texture.Width, (uint)texture.Height);
-                textureShader.SetZ(Global.LayerBaseZ[layerIndex]);
+                textureShader.SetZ(Z);
 
                 if (ColorKey == null)
                     textureShader.SetColorKey(1.0f, 0.0f, 1.0f);
                 else
-                    textureShader.SetColorKey(ColorKey.R / 255.0f, ColorKey.G / 255.0f, ColorKey.B / 255.0f);
+                    textureShader.SetColorKey(ColorKey.Value.R / 255.0f, ColorKey.Value.G / 255.0f, ColorKey.Value.B / 255.0f);
 
                 if (ColorOverlay == null)
                     textureShader.SetColorOverlay(1.0f, 1.0f, 1.0f, 1.0f);
                 else
-                    textureShader.SetColorOverlay(ColorOverlay.R / 255.0f, ColorOverlay.G / 255.0f, ColorOverlay.B / 255.0f, ColorOverlay.A / 255.0f);
+                    textureShader.SetColorOverlay(ColorOverlay.Value.R / 255.0f, ColorOverlay.Value.G / 255.0f, ColorOverlay.Value.B / 255.0f, ColorOverlay.Value.A / 255.0f);
             }
             else
             {
                 var colorShader = ColorShader.Instance;
 
                 colorShader.UpdateMatrices(SupportZoom);
-                colorShader.SetZ(Global.LayerBaseZ[layerIndex]);
+                colorShader.SetZ(Z);
             }
             
             renderBuffer.Render();
@@ -118,6 +133,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
         public int GetDrawIndex(Sprite sprite)
         {
             return renderBuffer.GetDrawIndex(sprite, PositionTransformation, SizeTransformation);
+        }
+
+        public int GetDrawIndex(Shape shape)
+        {
+            return renderBuffer.GetDrawIndex(shape, PositionTransformation, SizeTransformation);
         }
 
         public void FreeDrawIndex(int index)
@@ -130,20 +150,19 @@ namespace Silk.NET.UI.Renderer.OpenGL
             renderBuffer.UpdatePosition(index, sprite, PositionTransformation, SizeTransformation);
         }
 
+        public void UpdatePosition(int index, Shape shape)
+        {
+            renderBuffer.UpdatePosition(index, shape, PositionTransformation, SizeTransformation);
+        }
+
         public void UpdateTextureAtlasOffset(int index, Sprite sprite)
         {
             renderBuffer.UpdateTextureAtlasOffset(index, sprite);
         }
 
-        public void UpdateDisplayLayer(int index, byte displayLayer)
+        public void UpdateDisplayLayer(int index, uint displayLayer)
         {
             renderBuffer.UpdateDisplayLayer(index, displayLayer);
-        }
-
-        public void TestNode(RenderNode node)
-        {
-            if (RenderNode.Shape != renderBuffer.Shape)
-                throw new InvalidOperationException($"Only nodes with shape {Enum.GetName(typeof(LayerShape), renderBuffer.Shape)} are allowed for this layer.");
         }
 
         public void Dispose()

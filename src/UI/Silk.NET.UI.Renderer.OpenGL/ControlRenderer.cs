@@ -7,12 +7,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
     public class ControlRenderer : IControlRenderer
     {
         private readonly Dictionary<Layer, RenderLayer> renderLayers = new Dictionary<Layer, RenderLayer>();
-        private readonly Dictionary<int, RenderNode> renderNodes = new Dictionary<int, RenderNode>();
+        private readonly Dictionary<int, IRenderNode> renderNodes = new Dictionary<int, IRenderNode>();
         private readonly IndexPool renderNodeIndexPool = new IndexPool();
         private readonly Context context;
         private readonly RenderDimensionReference renderDimensionReference;
         private readonly TextureAtlas textureAtlas = new TextureAtlas();
-        private int displayLayer = 0;
+        private uint displayLayer = 0;
 
         public ControlRenderer(RenderDimensionReference renderDimensionReference)
         {
@@ -21,7 +21,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             renderLayers.Add(Layer.Controls, new RenderLayer(Layer.Controls, null));
             renderLayers.Add(Layer.Images, new RenderLayer(Layer.Images, textureAtlas.AtlasTexture));
-            renderLayers.Add(Layer.Shapes, new RenderLayer(Layer.Shapes, null));
+            renderLayers.Add(Layer.Triangles, new RenderLayer(Layer.Triangles, null));
+            renderLayers.Add(Layer.Ellipsis, new RenderLayer(Layer.Ellipsis, null));
+            renderLayers.Add(Layer.RoundRects, new RenderLayer(Layer.RoundRects, null));
         }
 
         public void StartRenderCycle()
@@ -134,11 +136,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 return -1;
 
             int renderObjectIndex = renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var sprite = new Sprite(width, height, renderDimensionReference);
+            var sprite = new Sprite(image.Width, image.Height, renderDimensionReference);
 
             sprite.X = x;
             sprite.Y = y;
-            sprite.Color = color;
+            sprite.Color = colorOverlay ?? Color.White;
             sprite.TextureAtlasOffset = textureAtlas.AddTexture(image);
             sprite.DisplayLayer = displayLayer++; // last draw call -> last rendering (= highest display layer)
             sprite.Layer = renderLayers[Layer.Controls];

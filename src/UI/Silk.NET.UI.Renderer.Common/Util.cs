@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace Silk.NET.UI.Renderer
 {
-    internal static class Util
+    public static class Util
     {
         public static bool FloatEqual(float f1, float f2)
         {
@@ -23,6 +23,16 @@ namespace Silk.NET.UI.Renderer
         public static int Round(float f)
         {
             return (int)Math.Round(f);
+        }
+
+        public static int Limit(int minValue, int value, int maxValue)
+        {
+            return Math.Max(minValue, Math.Min(value, maxValue));
+        }
+
+        public static short LimitToShort(int value)
+        {
+            return (short)Limit(short.MinValue, value, short.MaxValue);
         }
 
         public static float Min(float firstValue, float secondValue, params float[] values)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
@@ -26,21 +27,32 @@ namespace Silk.NET.UI.Renderer.OpenGL
             RoundRect,
         }
 
+        public const int TriangleVertices = 3;
+        public const int EllipseVertices = 65; // 1 center, 64 outline (drawn as triangle fan)
+        public const int RoundRectVertices = 29; // 1 center, 7 for each corner (drawn as triangle fan)
+
         protected int? drawIndex = null;
-        int numVertices = 0;
+        public override int VerticesPerNode { get; } = 0;
         byte displayLayer = 0;
         Type type = Type.Triangle;
         Point[] points;
+        public override PrimitiveType PrimitiveType => type switch
+        {
+            Type.Triangle => PrimitiveType.Triangles,
+            Type.Ellipse => PrimitiveType.TriangleFan,
+            Type.RoundRect => PrimitiveType.TriangleFan,
+            _ => PrimitiveType.Triangles,
+        };
 
         private Shape(Type type, RenderDimensionReference renderDimensionReference, params Point[] points)
-            : base(LayerShape.Polygon, CalculateWidth(type, points), CalculateHeight(type, points), renderDimensionReference)
+            : base(CalculateWidth(type, points), CalculateHeight(type, points), renderDimensionReference)
         {
             this.points = points;
-            numVertices = type switch
+            VerticesPerNode = type switch
             {
-                Type.Triangle => 3,
-                Type.Ellipse => 64, // TODO
-                Type.RoundRect => 20, // TODO
+                Type.Triangle => TriangleVertices,
+                Type.Ellipse => EllipseVertices,
+                Type.RoundRect => RoundRectVertices,
                 _ => throw new ArgumentException("Invalid shape type.")
             };
         }
@@ -76,7 +88,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return type switch
             {
                 Type.Triangle => Util.Max(points[0].Y, points[1].Y, points[2].Y) - Util.Min(points[0].Y, points[1].Y, points[2].Y),
-                Type.Circle => points[0].Y,
+                Type.Ellipse => points[0].Y,
                 Type.RoundRect => points[0].Y,
                 _ => 0
             };
@@ -145,7 +157,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                         }
                     }
                     break;
-                case Type.Circle:
+                case Type.Ellipse:
                 case Type.RoundRect:
                     points[0] = new Point(width, height);
                     break;

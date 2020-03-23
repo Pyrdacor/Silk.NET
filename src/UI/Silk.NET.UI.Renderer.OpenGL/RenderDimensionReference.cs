@@ -10,10 +10,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void SetDimensions(int width, int height)
         {
-            if (this.width != width || this.height != height)
+            if (Width != width || Height != height)
             {
-                this.width = width;
-                this.height = height;
+                Width = width;
+                Height = height;
                 DimensionsChanged?.Invoke();
             }
         }

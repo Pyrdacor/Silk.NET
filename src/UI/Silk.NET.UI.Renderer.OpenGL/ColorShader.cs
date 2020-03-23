@@ -1,4 +1,6 @@
-﻿namespace Silk.NET.UI.Renderer.OpenGL
+﻿using System;
+using System.Numerics;
+namespace Silk.NET.UI.Renderer.OpenGL
 {
     internal class ColorShader
     {
@@ -102,12 +104,22 @@
 
         public void UpdateMatrices(bool zoom)
         {
-            if (zoom)
-                shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentModelViewMatrix.ToArray(), true);
+            if (State.CurrentModelViewMatrix != null)
+            {
+                if (zoom)
+                    shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentModelViewMatrix.Value.ToArray(), true);
+                else
+                    shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentUnzoomedModelViewMatrix.Value.ToArray(), true);
+            }
             else
-                shaderProgram.SetInputMatrix(modelViewMatrixName, State.CurrentUnzoomedModelViewMatrix.ToArray(), true);
+            {
+                shaderProgram.SetInputMatrix(modelViewMatrixName, Matrix4x4.Identity.ToArray(), true);
+            }
 
-            shaderProgram.SetInputMatrix(projectionMatrixName, State.CurrentProjectionMatrix.ToArray(), true);
+            if (State.CurrentProjectionMatrix == null)
+                throw new InvalidOperationException("No projection matrix is set.");
+
+            shaderProgram.SetInputMatrix(projectionMatrixName, State.CurrentProjectionMatrix.Value.ToArray(), true);
         }
 
         public void Use()

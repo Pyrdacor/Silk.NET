@@ -1,5 +1,5 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
+using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
@@ -19,15 +19,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
         bool notOnScreen = true;
         readonly RenderDimensionReference renderDimensionReference = null;
 
-        protected RenderNode(LayerShape shape, int width, int height, RenderDimensionReference renderDimensionReference)
+        protected RenderNode(int width, int height, RenderDimensionReference renderDimensionReference)
         {
-            Shape = shape;
             Width = width;
             Height = height;
             this.renderDimensionReference = renderDimensionReference;
         }
-
-        public LayerShape Shape { get; } = LayerShape.Rect;
 
         public bool Visible
         {
@@ -100,6 +97,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public int Height { get; private set; }
 
+        public abstract int VerticesPerNode { get; }
+        public abstract PrimitiveType PrimitiveType { get; }
+
         public virtual void Resize(int width, int height)
         {
             Width = width;
@@ -121,7 +121,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             bool oldNotOnScreen = notOnScreen;
             bool oldVisible = Visible;
 
-            notOnScreen = !virtualScreen.IntersectsWith(new Rect(X, Y, Width, Height));
+            notOnScreen = !renderDimensionReference.IntersectsWith(new Rectangle(X, Y, Width, Height));
 
             if (oldNotOnScreen != notOnScreen)
             {

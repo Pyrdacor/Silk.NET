@@ -3,11 +3,13 @@ using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
-    internal class LayerBuffer : BufferObject<ushort>
+    using LayerValueType = UInt32;
+
+    internal class LayerBuffer : BufferObject<LayerValueType>
     {
         uint index = 0;
         bool disposed = false;
-        byte[] buffer = null;
+        LayerValueType[] buffer = null;
         readonly object bufferLock = new object();
         int size; // count of values
         readonly IndexPool indices = new IndexPool();
@@ -16,7 +18,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public override int Size => size;
 
-        public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedByte;
+        public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedInt;
 
         public override int Dimension => 1;
 
@@ -28,7 +30,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 usageHint = GLEnum.StaticDraw;
         }
 
-        public int Add(byte layer, int index = -1)
+        public int Add(LayerValueType layer, int index = -1)
         {
             bool reused;
 
@@ -39,7 +41,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             if (buffer == null)
             {
-                buffer = new byte[128];
+                buffer = new LayerValueType[128];
                 buffer[0] = layer;
                 size = 1;
                 changedSinceLastCreation = true;
@@ -72,7 +74,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return index;
         }
 
-        public void Update(int index, byte layer)
+        public void Update(int index, LayerValueType layer)
         {
             if (buffer[index] != layer)
             {
@@ -145,9 +147,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             {
                 unsafe
                 {
-                    fixed (byte* ptr = &buffer[0])
+                    fixed (LayerValueType* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(byte)),
+                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(LayerValueType)),
                             ptr, usageHint);
                     }
                 }
@@ -170,9 +172,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             {
                 unsafe
                 {
-                    fixed (byte* ptr = &buffer[0])
+                    fixed (LayerValueType* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(byte)),
+                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(LayerValueType)),
                             ptr, usageHint);
                     }
                 }

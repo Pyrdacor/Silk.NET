@@ -1,5 +1,4 @@
 ﻿using System;
-using Silk.NET.UI.Common;
 
 namespace Silk.NET.UI.Test
 {

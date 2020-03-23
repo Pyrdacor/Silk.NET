@@ -3,12 +3,14 @@ using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
-    internal class IndexBuffer : BufferObject<uint>
+    using IndexType = UInt32;
+
+    internal class IndexBuffer : BufferObject<IndexType>
     {
         uint index = 0;
         bool disposed = false;
         readonly object bufferLock = new object();
-        private uint[] buffer = null;
+        private IndexType[] buffer = null;
         bool changedSinceLastCreation = true;
         int size = 0;
 
@@ -50,9 +52,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             {
                 unsafe
                 {
-                    fixed (uint* ptr = &buffer[0])
+                    fixed (IndexType* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(GLEnum.ElementArrayBuffer, (uint)(Size * sizeof(uint)),
+                        State.Gl.BufferData(GLEnum.ElementArrayBuffer, (uint)(Size * sizeof(IndexType)),
                             ptr, GLEnum.StaticDraw);
                     }
                 }
@@ -75,9 +77,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             {
                 unsafe
                 {
-                    fixed (uint* ptr = &buffer[0])
+                    fixed (IndexType* ptr = &buffer[0])
                     {
-                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(uint)),
+                        State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(IndexType)),
                             ptr, GLEnum.StaticDraw);
                     }
                 }
@@ -94,7 +96,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 throw new Exceptions.InsufficientResourcesException("Too many polygons to render.");
 
             int arrayIndex = quadIndex * 6; // 2 triangles with 3 vertices each
-            uint vertexIndex = (uint)(quadIndex * 4); // 4 different vertices form a quad
+            var vertexIndex = (IndexType)(quadIndex * 4); // 4 different vertices form a quad
 
             if (size <= arrayIndex + 6)
             {
@@ -119,10 +121,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             if (size < offset + numVertices)
             {
-                buffer = EnsureBufferSize(buffer, offset + numVertices, out _);
+                buffer = EnsureBufferSize(buffer, (int)offset + numVertices, out _);
 
                 for (int i = 0; i < numVertices; ++i)
-                    buffer[offset] = offset++;
+                    buffer[offset] = (IndexType)offset++;
 
                 size = buffer.Length;
                 changedSinceLastCreation = true;

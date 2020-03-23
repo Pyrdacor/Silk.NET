@@ -39,7 +39,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             State.ClearMatrices();
             State.PushModelViewMatrix(Matrix4x4.Identity);
             State.PushUnzoomedModelViewMatrix(Matrix4x4.Identity);
-            State.PushProjectionMatrix(Matrix4x4.CreateOrtho2D(0, width, 0, height, 0, 1));
+            State.PushProjectionMatrix(Matrix4x4.CreateOrthographic(width, height, 0.0f, 1.0f));
 
             this.width = width;
             this.height = height;
@@ -123,7 +123,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 }
             }
 
-            unzoomedModelViewMatrix = new Matrix4(modelViewMatrix);
+            unzoomedModelViewMatrix = modelViewMatrix;
 
             State.PushUnzoomedModelViewMatrix(unzoomedModelViewMatrix);
 
@@ -132,9 +132,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 var x = 0.5f * width;
                 var y = 0.5f * height;
 
-                modelViewMatrix = Matrix4.CreateTranslation(x, y, 0.0f) *
-                    Matrix4.CreateScale(1.0f + zoom * 0.5f, 1.0f + zoom * 0.5f, 1.0f) *
-                    Matrix4.CreateTranslation(-x, -y, 0.0f) *
+                modelViewMatrix = Matrix4x4.CreateTranslation(x, y, 0.0f) *
+                    Matrix4x4.CreateScale(1.0f + zoom * 0.5f, 1.0f + zoom * 0.5f, 1.0f) *
+                    Matrix4x4.CreateTranslation(-x, -y, 0.0f) *
                     modelViewMatrix;
             }
 

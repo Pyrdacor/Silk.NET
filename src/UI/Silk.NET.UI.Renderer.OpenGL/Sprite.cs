@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
@@ -9,22 +10,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
     internal class Sprite : RenderNode
     {
         protected int? drawIndex = null;
-        Point textureAtlasOffset = null;
-        byte displayLayer = 0;
+        Point? textureAtlasOffset = null;
+        uint displayLayer = 0;
 
         public Sprite(int width, int height, int textureAtlasX, int textureAtlasY, RenderDimensionReference renderDimensionReference)
-            : base(Shape.Rect, width, height, renderDimensionReference)
+            : base(width, height, renderDimensionReference)
         {
             textureAtlasOffset = new Point(textureAtlasX, textureAtlasY);
         }
 
         public Sprite(int width, int height, RenderDimensionReference renderDimensionReference)
-            : base(Shape.Rect, width, height, renderDimensionReference)
+            : base(width, height, renderDimensionReference)
         {
 
         }
 
-        public Point TextureAtlasOffset
+        public Point? TextureAtlasOffset
         {
             get => textureAtlasOffset;
             set
@@ -32,13 +33,13 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 if (textureAtlasOffset == value)
                     return;
 
-                textureAtlasOffset = new Point(value);
+                textureAtlasOffset = value;
 
                 UpdateTextureAtlasOffset();
             }
         }
 
-        public byte DisplayLayer
+        public uint DisplayLayer
         {
             get => displayLayer;
             set
@@ -51,6 +52,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 UpdateDisplayLayer();
             }
         }
+
+        public override int VerticesPerNode => 6; // 2 triangles with 3 vertices each
+        public override PrimitiveType PrimitiveType => PrimitiveType.Triangles;
 
         protected override void AddToLayer()
         {
@@ -74,7 +78,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         protected virtual void UpdateTextureAtlasOffset()
         {
-            if (drawIndex.HasValue)
+            if (drawIndex.HasValue && textureAtlasOffset != null)
                 Layer.UpdateTextureAtlasOffset(drawIndex.Value, this);
         }
 
@@ -82,10 +86,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
         {
             return new Point[]
             {
-                { X, Y },
-                { X + Width, Y },
-                { X + Width, Y + Height },
-                { X, Y + Height }
+                new Point(X, Y),
+                new Point(X + Width, Y),
+                new Point(X + Width, Y + Height),
+                new Point(X, Y + Height)
             };
         }
 

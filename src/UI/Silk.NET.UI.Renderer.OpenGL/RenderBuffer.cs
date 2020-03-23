@@ -7,7 +7,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
     internal class RenderBuffer : IDisposable
     {
         bool disposed = false;
-
+        private bool supportTextures = false;
+        private int verticesPerNode = 0;
+        private PrimitiveType primitiveType = PrimitiveType.Triangles;
         readonly VertexArrayObject vertexArrayObject = null;
         readonly PositionBuffer positionBuffer = null;
         readonly PositionBuffer textureAtlasOffsetBuffer = null;
@@ -15,27 +17,35 @@ namespace Silk.NET.UI.Renderer.OpenGL
         readonly LayerBuffer layerBuffer = null;
         readonly IndexBuffer indexBuffer = null;
 
-        public RenderBuffer(LayerShape shape, bool supportTextures)
+        public RenderBuffer(bool supportTextures, int verticesPerNode, PrimitiveType primitiveType)
         {
-            // TODO: shape
+            this.supportTextures = supportTextures;
+            this.verticesPerNode = verticesPerNode;
+            this.primitiveType = primitiveType;
 
-            vertexArrayObject = new VertexArrayObject(TextureShader.Instance.ShaderProgram);
+            if (supportTextures)
+            {
+                vertexArrayObject = new VertexArrayObject(TextureShader.Instance.ShaderProgram);
+
+                textureAtlasOffsetBuffer = new PositionBuffer(false);
+                vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, textureAtlasOffsetBuffer);                
+            }
+            else
+            {
+                vertexArrayObject = new VertexArrayObject(ColorShader.Instance.ShaderProgram);
+
+                colorBuffer = new ColorBuffer(true);
+                vertexArrayObject.AddBuffer(ColorShader.DefaultColorName, colorBuffer);                
+            }
 
             indexBuffer = new IndexBuffer();
-            positionBuffer = new PositionBuffer(false);            
-            colorBuffer = new ColorBuffer(true);
+            positionBuffer = new PositionBuffer(false);
             layerBuffer = new LayerBuffer(true);
 
             vertexArrayObject.AddBuffer("index", indexBuffer);
             vertexArrayObject.AddBuffer(ColorShader.DefaultPositionName, positionBuffer);
-            vertexArrayObject.AddBuffer(TextureShader.DefaultColorOverlayName, colorBuffer);
+            
             vertexArrayObject.AddBuffer(ColorShader.DefaultLayerName, layerBuffer);
-
-            if (supportTextures)
-            {
-                textureAtlasOffsetBuffer = new PositionBuffer(false);
-                vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, textureAtlasOffsetBuffer);
-            }
         }
 
         public int GetDrawIndex(Sprite sprite, PositionTransformation positionTransformation,
@@ -57,25 +67,31 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             indexBuffer.InsertQuad(index / 4);
 
-            int colorBufferIndex = colorBuffer.Add(sprite.Color);
+            if (supportTextures)
+            {
+                var textureAtlasOffset = sprite.TextureAtlasOffset.Value; // should never be null
+                int textureAtlasOffsetBufferIndex = textureAtlasOffsetBuffer.Add((short)textureAtlasOffset.X, (short)textureAtlasOffset.Y);
 
-            if (colorBufferIndex != index)
-                throw new IndexOutOfRangeException("Invalid color buffer index");
+                if (textureAtlasOffsetBufferIndex != index)
+                    throw new IndexOutOfRangeException("Invalid texture atlas offset buffer index");
 
-            colorBuffer.Add(sprite.Color, colorBufferIndex + 1);
-            colorBuffer.Add(sprite.Color, colorBufferIndex + 2);
-            colorBuffer.Add(sprite.Color, colorBufferIndex + 3);
+                textureAtlasOffsetBuffer.Add((short)(textureAtlasOffset.X + sprite.Width), (short)textureAtlasOffset.Y, textureAtlasOffsetBufferIndex + 1);
+                textureAtlasOffsetBuffer.Add((short)(textureAtlasOffset.X + sprite.Width), (short)(textureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 2);
+                textureAtlasOffsetBuffer.Add((short)textureAtlasOffset.X, (short)(textureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 3);
+            }
+            else
+            {
+                int colorBufferIndex = colorBuffer.Add(sprite.Color);
 
-            int textureAtlasOffsetBufferIndex = textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
+                if (colorBufferIndex != index)
+                    throw new IndexOutOfRangeException("Invalid color buffer index");
 
-            if (textureAtlasOffsetBufferIndex != index)
-                throw new IndexOutOfRangeException("Invalid texture atlas offset buffer index");
+                colorBuffer.Add(sprite.Color, colorBufferIndex + 1);
+                colorBuffer.Add(sprite.Color, colorBufferIndex + 2);
+                colorBuffer.Add(sprite.Color, colorBufferIndex + 3);
+            }
 
-            textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y, textureAtlasOffsetBufferIndex + 1);
-            textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 2);
-            textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 3);
-
-            byte layer = sprite.DisplayLayer;
+            var layer = sprite.DisplayLayer;
             int layerBufferIndex = layerBuffer.Add(layer);
 
             if (layerBufferIndex != index)
@@ -88,7 +104,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return index;
         }
 
-        public int GetDrawIndex(Shape shape, PositionTransformation positionTransformation,
+        public int GetDrawIndex(Shape shape,
+            PositionTransformation positionTransformation,
             SizeTransformation sizeTransformation)
         {
             var vertexPositions = shape.ProvideVertexPositions();
@@ -104,30 +121,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 size = sizeTransformation(size);*/
 
             int index = positionBuffer.Add((short)vertexPositions[0].X, (short)vertexPositions[0].Y);
+
             for (int i = 1; i < vertexPositions.Length; ++i)
                 positionBuffer.Add((short)vertexPositions[i].X, (short)vertexPositions[0].Y, index + i);
 
             indexBuffer.InsertVertices(index / 2, vertexPositions.Length);
 
-            int colorBufferIndex = colorBuffer.Add(sprite.Color);
+            int colorBufferIndex = colorBuffer.Add(shape.Color);
 
             if (colorBufferIndex != index)
                 throw new IndexOutOfRangeException("Invalid color buffer index");
 
-            colorBuffer.Add(sprite.Color, colorBufferIndex + 1);
-            colorBuffer.Add(sprite.Color, colorBufferIndex + 2);
-            colorBuffer.Add(sprite.Color, colorBufferIndex + 3);
+            colorBuffer.Add(shape.Color, colorBufferIndex + 1);
+            colorBuffer.Add(shape.Color, colorBufferIndex + 2);
+            colorBuffer.Add(shape.Color, colorBufferIndex + 3);
 
-            int textureAtlasOffsetBufferIndex = textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
-
-            if (textureAtlasOffsetBufferIndex != index)
-                throw new IndexOutOfRangeException("Invalid texture atlas offset buffer index");
-
-            textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y, textureAtlasOffsetBufferIndex + 1);
-            textureAtlasOffsetBuffer.Add((short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 2);
-            textureAtlasOffsetBuffer.Add((short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height), textureAtlasOffsetBufferIndex + 3);
-
-            byte layer = sprite.DisplayLayer;
+            byte layer = shape.DisplayLayer;
             int layerBufferIndex = layerBuffer.Add(layer);
 
             if (layerBufferIndex != index)
@@ -140,11 +149,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return index;
         }
 
-        public void UpdatePosition(int index, RenderNode renderNode,
-            PositionTransformation positionTransformation, SizeTransformation sizeTransformation)
+        public void UpdatePosition(int index, Sprite sprite,
+            PositionTransformation positionTransformation,
+            SizeTransformation sizeTransformation)
         {
-            var position = new Position(renderNode.X, renderNode.Y);
-            var size = new Size(renderNode.Width, renderNode.Height);
+            var position = new Point(sprite.X, sprite.Y);
+            var size = new Size(sprite.Width, sprite.Height);
 
             if (positionTransformation != null)
                 position = positionTransformation(position);
@@ -152,19 +162,36 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (sizeTransformation != null)
                 size = sizeTransformation(size);
 
-            positionBuffer.Update(index, (short)position.X, (short)position.Y);
-            positionBuffer.Update(index + 1, (short)(position.X + size.Width), (short)position.Y);
-            positionBuffer.Update(index + 2, (short)(position.X + size.Width), (short)(position.Y + size.Height));
-            positionBuffer.Update(index + 3, (short)position.X, (short)(position.Y + size.Height));
+            short x = Util.LimitToShort(position.X);
+            short y = Util.LimitToShort(position.Y);
+            short width = Util.LimitToShort(size.Width);
+            short height = Util.LimitToShort(size.Height);
 
-            if (Shape != Shape.Triangle && baseLineBuffer != null)
+            positionBuffer.Update(index, x, y);
+            positionBuffer.Update(index + 1, (short)(x + width), y);
+            positionBuffer.Update(index + 2, (short)(x + width), (short)(y + height));
+            positionBuffer.Update(index + 3, x, (short)(y + height));
+        }
+
+        public void UpdatePosition(int index, Shape shape,
+            PositionTransformation positionTransformation, SizeTransformation sizeTransformation)
+        {
+            var vertexPositions = shape.ProvideVertexPositions();
+
+            // TODO: are the transformations possible with shapes?
+            /*if (positionTransformation != null)
+                position = positionTransformation(position);
+
+            if (sizeTransformation != null)
+                size = sizeTransformation(size);*/
+
+
+            for (int i = 0; i < vertexPositions.Length; ++i)
             {
-                ushort baseLine = (ushort)(position.Y + size.Height + baseLineOffset);
-
-                baseLineBuffer.Update(index, baseLine);
-                baseLineBuffer.Update(index + 1, baseLine);
-                baseLineBuffer.Update(index + 2, baseLine);
-                baseLineBuffer.Update(index + 3, baseLine);
+                positionBuffer.Update(index + i,
+                    Util.LimitToShort(vertexPositions[i].X),
+                    Util.LimitToShort(vertexPositions[i].Y)
+                );
             }
         }
 
@@ -173,10 +200,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (textureAtlasOffsetBuffer == null)
                 return;
 
-            textureAtlasOffsetBuffer.Update(index, (short)sprite.TextureAtlasOffset.X, (short)sprite.TextureAtlasOffset.Y);
-            textureAtlasOffsetBuffer.Update(index + 1, (short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)sprite.TextureAtlasOffset.Y);
-            textureAtlasOffsetBuffer.Update(index + 2, (short)(sprite.TextureAtlasOffset.X + sprite.Width), (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
-            textureAtlasOffsetBuffer.Update(index + 3, (short)sprite.TextureAtlasOffset.X, (short)(sprite.TextureAtlasOffset.Y + sprite.Height));
+            short x = Util.LimitToShort(sprite.TextureAtlasOffset.Value.X);
+            short y = Util.LimitToShort(sprite.TextureAtlasOffset.Value.Y);
+            short width = Util.LimitToShort(sprite.Width);
+            short height = Util.LimitToShort(sprite.Height);
+
+            textureAtlasOffsetBuffer.Update(index, x, y);
+            textureAtlasOffsetBuffer.Update(index + 1, (short)(x + width), y);
+            textureAtlasOffsetBuffer.Update(index + 2, (short)(x + width), (short)(y + height));
+            textureAtlasOffsetBuffer.Update(index + 3, x, (short)(y + height));
         }
 
         public void UpdateColor(int index, Color color)
@@ -190,7 +222,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
         }
 
-        public void UpdateDisplayLayer(int index, byte displayLayer)
+        public void UpdateDisplayLayer(int index, uint displayLayer)
         {
             if (layerBuffer != null)
             {
@@ -229,22 +261,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 textureAtlasOffsetBuffer.Remove(index + 1);
                 textureAtlasOffsetBuffer.Remove(index + 2);
                 textureAtlasOffsetBuffer.Remove(index + 3);
-            }
-
-            if (maskTextureAtlasOffsetBuffer != null)
-            {
-                maskTextureAtlasOffsetBuffer.Remove(index);
-                maskTextureAtlasOffsetBuffer.Remove(index + 1);
-                maskTextureAtlasOffsetBuffer.Remove(index + 2);
-                maskTextureAtlasOffsetBuffer.Remove(index + 3);
-            }
-
-            if (baseLineBuffer != null)
-            {
-                baseLineBuffer.Remove(index);
-                baseLineBuffer.Remove(index + 1);
-                baseLineBuffer.Remove(index + 2);
-                baseLineBuffer.Remove(index + 3);
             }
 
             if (colorBuffer != null)
@@ -298,7 +314,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
                 try
                 {
-                    State.Gl.DrawElements(PrimitiveType.Triangles, (uint)positionBuffer.Size / 4 * 3, DrawElementsType.UnsignedInt, (void*)0);
+                    State.Gl.DrawElements(primitiveType, (uint)(positionBuffer.Size / 2 * verticesPerNode), DrawElementsType.UnsignedInt, (void*)0);
                 }
                 catch
                 {
@@ -325,8 +341,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     vertexArrayObject?.Dispose();
                     positionBuffer?.Dispose();
                     textureAtlasOffsetBuffer?.Dispose();
-                    maskTextureAtlasOffsetBuffer?.Dispose();
-                    baseLineBuffer?.Dispose();
                     colorBuffer?.Dispose();
                     layerBuffer?.Dispose();
                     indexBuffer?.Dispose();

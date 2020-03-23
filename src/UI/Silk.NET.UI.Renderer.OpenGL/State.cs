@@ -121,8 +121,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
             modelViewMatrixStack.Clear();
         }
 
-        public static Matrix4x4 CurrentProjectionMatrix => (projectionMatrixStack.Count == 0) ? null : projectionMatrixStack.Peek();
-        public static Matrix4x4 CurrentModelViewMatrix => (modelViewMatrixStack.Count == 0) ? null : modelViewMatrixStack.Peek();
-        public static Matrix4x4 CurrentUnzoomedModelViewMatrix => (unzoomedModelViewMatrixStack.Count == 0) ? null : unzoomedModelViewMatrixStack.Peek();
+        public static Matrix4x4? CurrentProjectionMatrix => projectionMatrixStack.Count == 0 ? (Matrix4x4?)null : projectionMatrixStack.Peek();
+        public static Matrix4x4? CurrentModelViewMatrix => modelViewMatrixStack.Count == 0 ? (Matrix4x4?)null : modelViewMatrixStack.Peek();
+        public static Matrix4x4? CurrentUnzoomedModelViewMatrix => unzoomedModelViewMatrixStack.Count == 0 ? (Matrix4x4?)null : unzoomedModelViewMatrixStack.Peek();
     }
 }
