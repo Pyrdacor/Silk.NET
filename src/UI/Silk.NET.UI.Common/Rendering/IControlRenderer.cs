@@ -12,4 +12,9 @@ namespace Silk.NET.UI
         int DrawLine(int x1, int y1, int x2, int y2, Color color);
         int DrawImage(int x, int y, Image image, Color? colorOverlay = null);
     }
+
+    public interface IControlRendererFactory
+    {
+        IControlRenderer CreateControlRenderer(Windowing.Common.IView view);
+    }
 }

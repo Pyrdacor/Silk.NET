@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Drawing;
+using System;
 using System.Numerics;
 using Silk.NET.OpenGL;
 
@@ -12,6 +13,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         Matrix4x4 modelViewMatrix = Matrix4x4.Identity;
         Matrix4x4 unzoomedModelViewMatrix = Matrix4x4.Identity;
         float zoom = 0.0f;
+        Color backgroundColor = Color.Gray;
 
         public Context(RenderDimensionReference dimensions)
         {
@@ -20,7 +22,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (State.OpenGLVersionMajor < 3 || (State.OpenGLVersionMajor == 3 && State.OpenGLVersionMinor < 1))
                 throw new NotSupportedException($"OpenGL version 3.1 is required for rendering. Your version is {State.OpenGLVersionMajor}.{State.OpenGLVersionMinor}.");
 
-            State.Gl.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            State.Gl.ClearColor(backgroundColor);
 
             State.Gl.Enable(EnableCap.DepthTest);
             State.Gl.DepthFunc(DepthFunction.Lequal);
@@ -58,6 +60,19 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 zoom = value;
 
                 ApplyMatrix();
+            }
+        }
+
+        public Color BackgroundColor
+        {
+            get => backgroundColor;
+            set
+            {
+                if (backgroundColor == value)
+                    return;
+
+                backgroundColor = value;
+                State.Gl.ClearColor(backgroundColor);
             }
         }
 

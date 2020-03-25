@@ -6,7 +6,16 @@ namespace Silk.NET.UI.Test
 {
     class Button : Control
     {
+        private int? drawReference = null;
+
         public Button(string? id) : base(id) { }
+
+        protected override void OnRender(RenderEventArgs args)
+        {
+            drawReference = args.Renderer.FillRectangle(drawReference, 20, 20, 100, 60, Color.LightGray);
+
+            base.OnRender(args);
+        }
     }
 
     class MyTemplate : Template
@@ -36,8 +45,8 @@ namespace Silk.NET.UI.Test
     {
         protected override void OnAfterViewInit()
         {
+            // Test output
             Console.WriteLine("Id: " + Children[0].Id);
-            // Console.WriteLine("background Color: " + Children[0].Style.Get<ColorValue?>("Background.Color").Value.Value.ToString());
         }
     }
 
@@ -45,23 +54,9 @@ namespace Silk.NET.UI.Test
     {
         static void Main(string[] args)
         {
-            ComponentManager.Run(typeof(MyComponent));
-
             var window = Silk.NET.Windowing.Window.Create(WindowOptions.Default);
-            var dimensions = new Silk.NET.UI.Renderer.OpenGL.RenderDimensionReference();
-            dimensions.SetDimensions(window.Size.Width, window.Size.Height);
-            var controlRenderer = new Silk.NET.UI.Renderer.OpenGL.ControlRenderer(dimensions);
 
-            window.Render += (double foo) =>
-            {
-                window.MakeCurrent();
-                controlRenderer.StartRenderCycle();
-                controlRenderer.FillRectangle(100, 100, 200, 200, Color.Red);
-                controlRenderer.EndRenderCycle();
-                window.SwapBuffers();
-            };
-
-            window.Run();
+            ComponentManager.Run(typeof(MyComponent), window, new Silk.NET.UI.Renderer.OpenGL.ControlRendererFactory());
         }
     }
 }

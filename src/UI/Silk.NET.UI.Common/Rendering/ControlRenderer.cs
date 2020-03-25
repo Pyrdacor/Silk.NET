@@ -6,14 +6,12 @@ namespace Silk.NET.UI
 {
     public class ControlRenderer
     {
-        private Control control;
         private IControlRenderer renderer;
         private List<int> lastRenderObjects;
         private readonly List<int> currentRenderObjects = new List<int>();
 
-        internal ControlRenderer(Control control, IControlRenderer renderer)
+        internal ControlRenderer(IControlRenderer renderer)
         {
-            this.control = control; // TODO: needed
             this.renderer = renderer;
         }
 
@@ -49,6 +47,7 @@ namespace Silk.NET.UI
             }
 
             currentRenderObjects.Add(renderObjectIndex);
+            lastRenderObjects.Remove(renderObjectIndex);
             return renderObjectIndex;
         }
 

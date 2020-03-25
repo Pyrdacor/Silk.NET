@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using Silk.NET.Windowing.Common;
 
 namespace Silk.NET.UI
 {
@@ -10,14 +10,12 @@ namespace Silk.NET.UI
         private static readonly Dictionary<string, List<string>> componentTypesByName = new Dictionary<string, List<string>>();
         private static readonly Dictionary<string, Type> componentTypesByFullName = new Dictionary<string, Type>();
 
-        public static void Run(Type rootComponentType)
+        public static void Run(Type rootComponentType, Windowing.Common.IView view, IControlRendererFactory controlRendererFactory)
         {
             if (!rootComponentType.IsSubclassOf(typeof(RootComponent)))
                 throw new ArgumentException($"The given type is not a subclass of `{nameof(RootComponent)}`.");
 
-            IControlRenderer controlRenderer = null; // TODO: get it from somewhere
             var rootComponent = Component.Create(rootComponentType, null, true) as RootComponent;
-            rootComponent.SetControlRenderer(controlRenderer);
 
             // find and register all component types
             foreach (var type in FindTypes((type) => type.IsSubclassOf(typeof(Component))))
@@ -30,11 +28,25 @@ namespace Silk.NET.UI
                 componentTypesByName[type.Name].Add(type.FullName);
             }
 
-            // init root component and its view
-            rootComponent.InitControl();
+            view.Load += () =>
+            {
+                var controlRenderer = controlRendererFactory.CreateControlRenderer(view);
+                rootComponent.SetControlRenderer(controlRenderer);
 
-            // enter UI loop
-            Loop(rootComponent);
+                // init root component and its view
+                rootComponent.InitControl();
+
+                view.Render += (double deltaTime) =>
+                {
+                    view.MakeCurrent();
+                    rootComponent.ControlRenderer.Init();
+                    Update(rootComponent, deltaTime);
+                    rootComponent.ControlRenderer.Render();
+                    view.SwapBuffers();
+                };
+            };
+            
+            view.Run();
 
             // destroy root component view
             rootComponent.DestroyView();
@@ -56,7 +68,7 @@ namespace Silk.NET.UI
             return Component.Create(componentTypesByFullName[possibleTypes[0]], id, false);
         }
 
-        private static void Loop(Component rootComponent)
+        private static void Update(Component rootComponent, double deltaTime)
         {
             // TODO: process UI events
             // TODO: draw / update UI

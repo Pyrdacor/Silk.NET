@@ -40,7 +40,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         {
             get;
             set;
-        }
+        } = true;
 
         public PositionTransformation PositionTransformation
         {

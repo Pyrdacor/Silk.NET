@@ -9,8 +9,7 @@ namespace Silk.NET.UI
     public abstract class Control
     {
         private Component parent;
-        private ControlRenderer controlRenderer;
-        internal virtual IControlRenderer ControlRenderer
+        internal virtual ControlRenderer ControlRenderer
         {
             get => Parent != null ? Parent.ControlRenderer : null;
         }
@@ -190,7 +189,6 @@ namespace Silk.NET.UI
         {
             Id = id;
             InternalChildren = new ControlList(this);
-            controlRenderer = new ControlRenderer(this, ControlRenderer);
 
             // Register control properties
             RegisterControlProperty(x);
@@ -226,6 +224,9 @@ namespace Silk.NET.UI
 
         protected virtual void OnRender(RenderEventArgs args)
         {
+            foreach (var child in InternalChildren)
+                child.OnRender(args);
+
             Render?.Invoke(this, args);
         }
 
@@ -248,7 +249,7 @@ namespace Silk.NET.UI
 
         internal void RenderControl()
         {
-            OnRender(new RenderEventArgs(controlRenderer));
+            OnRender(new RenderEventArgs(ControlRenderer));
         }
     }
 

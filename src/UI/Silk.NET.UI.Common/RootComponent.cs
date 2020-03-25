@@ -2,13 +2,13 @@ namespace Silk.NET.UI
 {
     public abstract class RootComponent : Component
     {        
-        private IControlRenderer controlRenderer;
+        private ControlRenderer controlRenderer;
 
-        internal override IControlRenderer ControlRenderer => controlRenderer;
+        internal override ControlRenderer ControlRenderer => controlRenderer;
 
         internal void SetControlRenderer(IControlRenderer controlRenderer)
         {
-            this.controlRenderer = controlRenderer;
+            this.controlRenderer = new ControlRenderer(controlRenderer);
         }
     }
 }

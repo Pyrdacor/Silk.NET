@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
-    public class ControlRenderer : IControlRenderer
+    internal class ControlRenderer : IControlRenderer
     {
         private readonly Dictionary<Layer, RenderLayer> renderLayers = new Dictionary<Layer, RenderLayer>();
         private readonly Dictionary<int, IRenderNode> renderNodes = new Dictionary<int, IRenderNode>();
@@ -28,12 +29,16 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void StartRenderCycle()
         {
+            context.SetRotation(Rotation.None); // TODO: can be used later for different devices
+
             displayLayer = 0;
+            State.Gl.Clear((uint)ClearBufferMask.ColorBufferBit | (uint)ClearBufferMask.DepthBufferBit);
         }
 
         public void EndRenderCycle()
         {
-            
+            foreach (var renderLayer in renderLayers)
+                renderLayer.Value.Render();
         }
 
         public void RemoveRenderObject(int renderObjectIndex)
@@ -149,6 +154,16 @@ namespace Silk.NET.UI.Renderer.OpenGL
             renderNodes.Add(renderObjectIndex, sprite);
 
             return renderObjectIndex;
+        }
+    }
+
+    public class ControlRendererFactory : IControlRendererFactory
+    {
+        public IControlRenderer CreateControlRenderer(Windowing.Common.IView view)
+        {
+            var dimensions = new Silk.NET.UI.Renderer.OpenGL.RenderDimensionReference();
+            dimensions.SetDimensions(view.Size.Width, view.Size.Height);
+            return  new Silk.NET.UI.Renderer.OpenGL.ControlRenderer(dimensions);
         }
     }
 }
