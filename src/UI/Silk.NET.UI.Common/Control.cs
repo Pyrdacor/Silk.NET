@@ -4,8 +4,6 @@ using System.Drawing;
 
 namespace Silk.NET.UI
 {
-    using Properties;
-
     public abstract class Control
     {
         private Component _parent;
@@ -14,7 +12,7 @@ namespace Silk.NET.UI
             get => Parent != null ? Parent.ControlRenderer : null;
         }
         private readonly ControlStyle style = new ControlStyle();
-        internal ControlStyle Style => style;
+        public ControlStyle Style => style;
 
 
         #region Lifecycle Hooks
@@ -226,8 +224,6 @@ namespace Silk.NET.UI
         {
             foreach (var child in InternalChildren)
                 child.OnRender(args);
-
-            Render?.Invoke(this, args);
         }
 
         // TODO: the two following methods have to be called from the component manager
@@ -249,7 +245,9 @@ namespace Silk.NET.UI
 
         internal void RenderControl()
         {
-            OnRender(new RenderEventArgs(ControlRenderer));
+            var args = new RenderEventArgs(ControlRenderer);
+            OnRender(args);
+            Render?.Invoke(this, args);
         }
     }
 

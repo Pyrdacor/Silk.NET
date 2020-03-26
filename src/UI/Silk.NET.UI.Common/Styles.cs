@@ -83,7 +83,7 @@ namespace Silk.NET.UI
                 {
                     foreach (var field in EnumerateFields(style.Value))
                     {
-                        control.Style.SetProperty(field.Key, field.Value);
+                        control.Style.SetStyleProperty(field.Key, field.Value);
                     }
                 }
             }

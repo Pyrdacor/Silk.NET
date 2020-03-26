@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Properties
+namespace Silk.NET.UI
 {
     internal interface IControlProperty
     {
@@ -30,10 +30,7 @@ namespace Silk.NET.UI.Properties
     public abstract class ControlProperty<T> : IControlProperty
     {
         public string Name { get; }
-
         public abstract T Value { get; set; }
-
-        internal Observable<T> BoundVariable { get; private set; }
         public bool ChangeEventsEnabled { get; set; } = true;
 
         internal event Action InternalValueChanged;
@@ -51,8 +48,8 @@ namespace Silk.NET.UI.Properties
 
         internal void Bind(Observable<T> variable)
         {
-            BoundVariable = variable;
-            BoundVariable?.Subscribe(value => {
+            variable?.Subscribe(value =>
+            {
                 if (!Value.Equals(value))
                 {
                     Value = value;
@@ -62,7 +59,7 @@ namespace Silk.NET.UI.Properties
                         DynamicValueChanged?.Invoke();
                     }
                 }
-            }, error => throw error);
+            }, error => throw error); // TODO: how to handle errors here
         }
 
         internal void OnValueChanged()

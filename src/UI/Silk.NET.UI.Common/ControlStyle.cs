@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 
 namespace Silk.NET.UI
 {
-    using Properties;
-
     public class ControlStyle
     {
-        private static readonly Dictionary<string, IControlProperty> DefaultStyleProperties = new Dictionary<string, IControlProperty>();
-        private readonly Dictionary<string, IControlProperty> _styleProperties = new Dictionary<string, IControlProperty>();
+        private static readonly Dictionary<string, IControlProperty> DefaultStyleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IControlProperty> _styleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
 
         static ControlStyle()
         {
@@ -34,7 +33,7 @@ namespace Silk.NET.UI
                 if (checkType.IsPrimitive || checkType.IsEnum ||
                     Util.CheckGenericType(checkType, typeof(AllDirectionStyleValue<>)) ||
                     checkType == typeof(ColorValue)
-                    )
+                )
                 {
                     var defaultValueAttribute = field.GetCustomAttribute(typeof(DefaultValueAttribute));
                     object defaultValue;
@@ -115,33 +114,294 @@ namespace Silk.NET.UI
             }
         }
 
-        public dynamic this[string name]
+        private ControlProperty<T> GetProperty<T>(string name)
         {
-            get
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            name = name.ToLower();
+
+            if (!_styleProperties.ContainsKey(name))
+                return null;
+
+            return _styleProperties[name] as ControlProperty<T>;
+        }
+
+        public void BindProperty<T>(string name, Observable<T> variable)
+        {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (!StylePropertyNames.Any(n => string.Compare(n, name, true) == 0))
+                throw new ArgumentException($"No style property with the name `{name}` exists.");
+
+            if (variable == null)
+                throw new ArgumentNullException(nameof(variable));
+
+            if (typeof(T).IsClass)
+                BindReferenceProperty(name, BindHelper<T>(variable));
+            else
+                BindValueProperty(name, BindHelper<T>(variable));
+        }
+
+        private dynamic BindHelper<T>(Observable<T> variable)
+        {
+            return variable;
+        }
+
+        private void BindReferenceProperty<T>(string name, Observable<T> variable) where T : class
+        {
+            variable.SubscribeUntilCompleted(value =>
             {
-                if (!_styleProperties.ContainsKey(name))
+                if (value == null)
                 {
-                    return null;
+                    _styleProperties.Remove(name);
+                    return;
                 }
 
-                return _styleProperties[name];
+                if (!SetStyleProperty(name, value))
+                {
+                    var property = GetProperty<T>(name);
+
+                    if (property == null)
+                        throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
+
+                    property.Bind(variable);
+                }
+            });
+        }
+
+        private void BindValueProperty<T>(string name, Observable<T> variable) where T : struct
+        {
+            variable.SubscribeUntilCompleted(value =>
+            {
+                if (!SetStyleProperty(name, value))
+                {
+                    var property = GetProperty<T>(name);
+
+                    if (property == null && !Util.CheckGenericType(typeof(T), typeof(Nullable<>)))
+                    {
+                        var nullableProperty = GetProperty<T?>(name);
+
+                        if (nullableProperty != null)
+                        {
+                            nullableProperty.Bind(variable.Map(value => new Nullable<T>(value)));
+                            return;
+                        }
+                    }
+
+                    if (property == null)
+                        throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
+
+                    property.Bind(variable);
+                }
+            });
+        }
+
+        private void BindValueProperty<T>(string name, Observable<T?> variable) where T : struct
+        {
+            variable.SubscribeUntilCompleted(value =>
+            {
+                if (value == null)
+                {
+                    _styleProperties.Remove(name);
+                    return;
+                }
+
+                if (!SetStyleProperty(name, value))
+                {
+                    var property = GetProperty<T>(name);
+
+                    if (property == null && !Util.CheckGenericType(typeof(T), typeof(Nullable<>)))
+                    {
+                        var nullableProperty = GetProperty<T?>(name);
+
+                        if (nullableProperty != null)
+                        {
+                            nullableProperty.Bind(variable);
+                            return;
+                        }
+                    }
+
+                    if (property == null)
+                        throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
+
+                    property.Bind(variable.Filter(v => v.HasValue).Map(v => v.Value));
+                }
+            });
+        }
+
+        private void SetReferenceProperty<T>(string name, T value) where T : class
+        {
+            if (!SetStyleProperty(name, value))
+            {
+                var property = GetProperty<T>(name);
+
+                if (property == null)
+                    throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
+
+                property.Value = value;
             }
         }
 
-        public ControlProperty<T> Get<T>(string name)
+        private void SetValueProperty<T>(string name, T value) where T : struct
         {
-            return this[name] as ControlProperty<T>;
+            if (!SetStyleProperty(name, value))
+            {
+                var property = GetProperty<T>(name);
+
+                if (property == null && !Util.CheckGenericType(typeof(T), typeof(Nullable<>)))
+                {
+                    var nullableProperty = GetProperty<T?>(name);
+
+                    if (nullableProperty != null)
+                    {
+                        nullableProperty.Value = value;
+                        return;
+                    }
+                }
+
+                if (property == null)
+                    throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
+
+                property.Value = value;
+            }
         }
 
-        internal void SetProperty(string name, object value)
+        public void SetProperty(string name, dynamic value)
         {
-            if (!_styleProperties.ContainsKey(name)) // only set once
+            if (value == null)
+            {
+                _styleProperties.Remove(name);
+                return;
+            }
+
+            if (value.GetType().IsClass)
+                SetReferenceProperty(name, value);
+            else
+                SetValueProperty(name, value);
+        }
+
+        /// <summary>
+        /// Retrieves the value of the given style property.
+        /// 
+        /// Some properties have the same meaning like:
+        /// - Background.Color
+        /// - BackgroundColor
+        /// 
+        /// If you pass the non-hierarchy version like
+        /// BackgroundColor this value is returned.
+        /// If it wasn't set to a valid value the default
+        /// value for this style property is returned.
+        /// 
+        /// If you pass the hierarchy version like
+        /// Background.Color this value is returned.
+        /// If it wasn't set to a valid value the
+        /// non-hierarchy version is checked like above
+        /// and eventually the default value is returned
+        /// if neither of the properties is set to a valid value.
+        /// 
+        /// This step is performed for any hierarchy level:
+        /// So this is the order of checking for more than
+        /// one sub-level:
+        /// A.B.C.D -> AB.C.D -> ABC.D -> ABCD -> default value of A.B.C.D
+        /// 
+        /// The case of the name is ignored so the following are the same:
+        /// backgroundcolor
+        /// backgroundColor
+        /// BackgroundColor
+        /// BACKGROUNDCOLOR
+        /// background.Color
+        /// ...
+        /// </summary>
+        /// <param name="name">Full qualified name of the style property</param>
+        /// <typeparam name="T">Type of the expected value</typeparam>
+        /// <returns>The value of the style property</returns>
+        public PropertyValue<T> Get<T>(string name)
+        {
+            return Get<T>(name, () => GetDefault<T>(name));
+        }
+
+        /// <summary>
+        /// This is like <see cref="Get<T>(string)"/> but instead of
+        /// returning the internal default value in case the property
+        /// is not set, the given defaultValue is returned.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="defaultValue"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public PropertyValue<T> Get<T>(string name, T defaultValue)
+        {
+            return Get<T>(name, () => defaultValue);
+        }
+
+        private PropertyValue<T> Get<T>(string name, Func<T> defaultValueProvider)
+        {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            name = name.ToLower();
+
+            if (!_styleProperties.ContainsKey(name))
+                return null;
+
+            var result = _styleProperties[name] as ControlProperty<T>;
+
+            if (result == null) // not of the correct type
+                throw new InvalidCastException($"Style property `{name}` is not of type `{typeof(T).Name}`.");
+
+            if (result.Value != null)
+                return new PropertyValue<T>(result.Value);
+
+            int dotPosition = name.IndexOf('.');
+            
+            if (dotPosition == -1)
+            {
+                return new PropertyValue<T>(defaultValueProvider());
+            }
+            else
+            {
+                return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the default value for the given style property.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetDefault<T>(string name)
+        {
+            name = name.ToLower();
+
+            if (!DefaultStyleProperties.ContainsKey(name))
+                return default(T);
+
+            return (DefaultStyleProperties[name] as ControlProperty<T>).Value;
+        }
+
+        internal bool SetStyleProperty(string name, object value)
+        {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (!StylePropertyNames.Any(n => string.Compare(n, name, true) == 0))
+                throw new ArgumentException($"No style property with the name `{name}` exists.");
+
+            if (!_styleProperties.ContainsKey(name))
             {
                 var property = CreateProperty(name, value.GetType(), value);
 
                 if (property != null)
+                {
                     _styleProperties.Add(name, property);
+                    return true;
+                }
             }
+
+            return false;
         }
     }
 }

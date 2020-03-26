@@ -1,6 +1,6 @@
 using System;
 
-namespace Silk.NET.UI.Properties
+namespace Silk.NET.UI
 {
     public class EnumProperty : ControlProperty<int?>
     {

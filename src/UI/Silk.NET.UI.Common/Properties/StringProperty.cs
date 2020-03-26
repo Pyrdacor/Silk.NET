@@ -1,4 +1,4 @@
-namespace Silk.NET.UI.Properties
+namespace Silk.NET.UI
 {
     public class StringProperty : ControlProperty<string>
     {

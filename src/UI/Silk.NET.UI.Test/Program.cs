@@ -12,7 +12,16 @@ namespace Silk.NET.UI.Test
 
         protected override void OnRender(RenderEventArgs args)
         {
+            var s1 = new Subject<int>();
+            var s2 = new Subject<int?>();
+            int? foo = null;
             _drawReference = args.Renderer.FillRectangle(_drawReference, 20, 20, 100, 60, Color.LightGray);
+            this.Style.SetProperty("border.size", 5);
+            this.Style.SetProperty("border.size", foo);
+            this.Style.BindProperty("border.size", s1);
+            this.Style.BindProperty("border.size", s2);
+            s1.Next(9);
+            s2.Next(null);
 
             base.OnRender(args);
         }
@@ -35,6 +44,7 @@ namespace Silk.NET.UI.Test
                 Background = new BackgroundStyle {
                     Color = "yellow"
                 },
+                BorderColor = "black"
             });
         }
     }

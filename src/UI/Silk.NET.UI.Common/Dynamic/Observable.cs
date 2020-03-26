@@ -51,17 +51,20 @@ namespace Silk.NET.UI
 
         protected void CallNextActions(T value)
         {
-            _subscribers.ForEach(s => s.Next(value));
+            // use to list as the collection may change in Next
+            _subscribers.ToList().ForEach(s => s.Next(value));
         }
 
         protected void CallErrorActions(Exception error)
         {
-            _subscribers.ForEach(s => s.Error(error));
+            // use to list as the collection may change in Error
+            _subscribers.ToList().ForEach(s => s.Error(error));
         }
 
         protected void CallCompleteActions()
         {
-            _subscribers.ForEach(s => s.Complete());
+            // use to list as the collection may change in Complete
+            _subscribers.ToList().ForEach(s => s.Complete());
         }
 
         public static implicit operator Observable<T>(T value)
