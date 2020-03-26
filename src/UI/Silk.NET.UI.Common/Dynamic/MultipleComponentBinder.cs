@@ -6,35 +6,35 @@ namespace Silk.NET.UI
 {
     internal class MultipleComponentBinder<T> : ComponentBinder
     {
-        private Observable<IEnumerable<T>> values;
-        private readonly List<Component> boundComponents = new List<Component>();
-        private string componentTypeName;
-        private Func<T, string> componentIdProvider;
+        private Observable<IEnumerable<T>> _values;
+        private readonly List<Component> _boundComponents = new List<Component>();
+        private string _componentTypeName;
+        private Func<T, string> _componentIdProvider;
 
         public MultipleComponentBinder(Observable<IEnumerable<T>> values, string componentTypeName, Func<T, string> componentIdProvider)
         {
-            this.values = values;
-            this.componentTypeName = componentTypeName;
-            this.componentIdProvider = componentIdProvider;
+            this._values = values;
+            this._componentTypeName = componentTypeName;
+            this._componentIdProvider = componentIdProvider;
         }
 
         public override void Bind(Component parentComponent)
         {
-            values.Subscribe(result =>
+            _values.Subscribe(result =>
             {
-                foreach (var boundComponent in boundComponents)
+                foreach (var boundComponent in _boundComponents)
                 {
-                    boundComponent.DestroyControl();
+                    boundComponent.DestroyControl(); // TODO: recheck if this is the right way and if this even work
                 }
 
-                boundComponents.Clear();
+                _boundComponents.Clear();
 
                 foreach (var value in result)
                 {
-                    var boundComponent = ComponentManager.InitializeComponent(componentTypeName,
-                        componentIdProvider == null ? null : componentIdProvider(value));
+                    var boundComponent = ComponentManager.InitializeComponent(_componentTypeName,
+                        _componentIdProvider == null ? null : _componentIdProvider(value));
                     boundComponent.AddTo(parentComponent);
-                    boundComponents.Add(boundComponent);
+                    _boundComponents.Add(boundComponent);
                 }
             });
         }

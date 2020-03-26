@@ -2,20 +2,20 @@
 {
     internal class TextureShader : ColorShader
     {
-        static TextureShader textureShader = null;
+        private static TextureShader _textureShader = null;
         internal static readonly string DefaultTexCoordName = "texCoord";
         internal static readonly string DefaultSamplerName = "sampler";
         internal static readonly string DefaultColorKeyName = "colorKey";
         internal static readonly string DefaultColorOverlayName = "color";
         internal static readonly string DefaultAtlasSizeName = "atlasSize";
 
-        readonly string texCoordName;
-        readonly string samplerName;
-        readonly string colorKeyName;
-        readonly string colorOverlayName;
-        readonly string atlasSizeName;
+        private readonly string _texCoordName;
+        private readonly string _samplerName;
+        private readonly string _colorKeyName;
+        private readonly string _colorOverlayName;
+        private readonly string _atlasSizeName;
 
-        static readonly string[] TextureFragmentShader = new string[]
+        private static readonly string[] TextureFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
             $"uniform vec3 {DefaultColorKeyName} = vec3(1, 0, 1);",
@@ -39,7 +39,7 @@
             $"}}"
         };
 
-        static readonly string[] TextureVertexShader = new string[]
+        private static readonly string[] TextureVertexShader = new string[]
         {
             GetVertexShaderHeader(),
             $"{GetInName(false)} ivec2 {DefaultPositionName};",
@@ -75,41 +75,41 @@
             string atlasSizeName, string layerName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, layerName, fragmentShaderLines, vertexShaderLines)
         {
-            this.texCoordName = texCoordName;
-            this.samplerName = samplerName;
-            this.colorKeyName = colorKeyName;
-            this.colorOverlayName = colorOverlayName;
-            this.atlasSizeName = atlasSizeName;
+            _texCoordName = texCoordName;
+            _samplerName = samplerName;
+            _colorKeyName = colorKeyName;
+            _colorOverlayName = colorOverlayName;
+            _atlasSizeName = atlasSizeName;
         }
 
         public void SetSampler(int textureUnit = 0)
         {
-            shaderProgram.SetInput(samplerName, textureUnit);
+            _shaderProgram.SetInput(_samplerName, textureUnit);
         }
 
         public void SetColorKey(float r, float g, float b)
         {
-            shaderProgram.SetInputVector3(colorKeyName, r, g, b);
+            _shaderProgram.SetInputVector3(_colorKeyName, r, g, b);
         }
 
         public void SetColorOverlay(float r, float g, float b, float a)
         {
-            shaderProgram.SetInputVector4(colorOverlayName, r, g, b, a);
+            _shaderProgram.SetInputVector4(_colorOverlayName, r, g, b, a);
         }
 
         public void SetAtlasSize(uint width, uint height)
         {
-            shaderProgram.SetInputVector2(atlasSizeName, width, height);
+            _shaderProgram.SetInputVector2(_atlasSizeName, width, height);
         }
 
         public new static TextureShader Instance
         {
             get
             {
-                if (textureShader == null)
-                    textureShader = new TextureShader();
+                if (_textureShader == null)
+                    _textureShader = new TextureShader();
 
-                return textureShader;
+                return _textureShader;
             }
         }
     }

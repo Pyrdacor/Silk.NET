@@ -13,13 +13,13 @@ namespace Silk.NET.UI
 
     public abstract class Observable<T>
     {
-        private readonly List<Subscriber<T>> subscribers = new List<Subscriber<T>>();
+        private readonly List<Subscriber<T>> _subscribers = new List<Subscriber<T>>();
 
         public virtual Subscription<T> Subscribe(Action<T> next, Action<Exception> error = null, Action complete = null)
         {
             var subscriber = new Subscriber<T>(next, error, complete);
 
-            subscribers.Add(subscriber);
+            _subscribers.Add(subscriber);
 
             return new Subscription<T>(this, subscriber);
         }
@@ -46,22 +46,22 @@ namespace Silk.NET.UI
 
         internal void Unsubscribe(Subscriber<T> subscriber)
         {
-            subscribers.Remove(subscriber);
+            _subscribers.Remove(subscriber);
         }
 
         protected void CallNextActions(T value)
         {
-            subscribers.ForEach(s => s.Next(value));
+            _subscribers.ForEach(s => s.Next(value));
         }
 
         protected void CallErrorActions(Exception error)
         {
-            subscribers.ForEach(s => s.Error(error));
+            _subscribers.ForEach(s => s.Error(error));
         }
 
         protected void CallCompleteActions()
         {
-            subscribers.ForEach(s => s.Complete());
+            _subscribers.ForEach(s => s.Complete());
         }
 
         public static implicit operator Observable<T>(T value)

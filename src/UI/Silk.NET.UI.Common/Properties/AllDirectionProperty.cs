@@ -4,16 +4,16 @@ namespace Silk.NET.UI.Properties
 {
     public class AllDirectionProperty<T> : ControlProperty<AllDirectionStyleValue<T>?> where T : struct
     {
-        private AllDirectionStyleValue<T>? value = null;
+        private AllDirectionStyleValue<T>? _value = null;
 
         public override AllDirectionStyleValue<T>? Value 
         { 
-            get => value;
+            get => _value;
             set
             {
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
+                    _value = value;
                     OnValueChanged();
                 }
             }
@@ -28,49 +28,49 @@ namespace Silk.NET.UI.Properties
         internal AllDirectionProperty(string name, AllDirectionStyleValue<T>? initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, AllDirectionStyleValue<T> initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, string initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, T? initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, T initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, Tuple<T, T> initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, Tuple<T, T, T> initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal AllDirectionProperty(string name, Tuple<T, T, T, T> initialValue)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
     }
 }

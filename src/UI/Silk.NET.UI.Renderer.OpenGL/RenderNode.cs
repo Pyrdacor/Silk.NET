@@ -10,47 +10,47 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
     internal abstract class RenderNode : IRenderNode
     {
-        int x = short.MaxValue;
-        int y = short.MaxValue;
-        bool visible = false;
-        RenderLayer layer = null;
-        bool visibleRequest = false;
-        bool deleted = false;
-        bool notOnScreen = true;
-        readonly RenderDimensionReference renderDimensionReference = null;
+        private int _x = short.MaxValue;
+        private int _y = short.MaxValue;
+        private bool _visible = false;
+        private RenderLayer _layer = null;
+        private bool _visibleRequest = false;
+        private bool _deleted = false;
+        private bool _notOnScreen = true;
+        private readonly RenderDimensionReference _renderDimensionReference = null;
 
         protected RenderNode(int width, int height, RenderDimensionReference renderDimensionReference)
         {
             Width = width;
             Height = height;
-            this.renderDimensionReference = renderDimensionReference;
+            _renderDimensionReference = renderDimensionReference;
         }
 
         public bool Visible
         {
-            get => visible && !deleted && !notOnScreen;
+            get => _visible && !_deleted && !_notOnScreen;
             set
             {
-                if (deleted)
+                if (_deleted)
                     return;
 
-                if (layer == null)
+                if (_layer == null)
                 {
-                    visibleRequest = value;
-                    visible = false;
+                    _visibleRequest = value;
+                    _visible = false;
                     return;
                 }
 
-                visibleRequest = false;
+                _visibleRequest = false;
 
-                if (visible == value)
+                if (_visible == value)
                     return;
 
-                visible = value;
+                _visible = value;
                 
                 if (Visible)
                     AddToLayer();
-                else if (!visible)
+                else if (!_visible)
                     RemoveFromLayer();
             }
         }
@@ -63,32 +63,32 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public RenderLayer Layer
         {
-            get => layer;
+            get => _layer;
             set
             {
-                if (layer == value)
+                if (_layer == value)
                     return;
 
-                if (layer != null && Visible)
+                if (_layer != null && Visible)
                     RemoveFromLayer();
 
-                layer = value;
+                _layer = value;
 
-                if (layer != null && visibleRequest && !deleted)
+                if (_layer != null && _visibleRequest && !_deleted)
                 {
-                    visible = true;
-                    visibleRequest = false;
+                    _visible = true;
+                    _visibleRequest = false;
                     CheckOnScreen();
                 }
 
-                if (layer == null)
+                if (_layer == null)
                 {
-                    visibleRequest = false;
-                    visible = false;
-                    notOnScreen = true;
+                    _visibleRequest = false;
+                    _visible = false;
+                    _notOnScreen = true;
                 }
 
-                if (layer != null && Visible)
+                if (_layer != null && Visible)
                     AddToLayer();
             }
         }
@@ -118,12 +118,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         bool CheckOnScreen()
         {
-            bool oldNotOnScreen = notOnScreen;
+            bool oldNotOnScreen = _notOnScreen;
             bool oldVisible = Visible;
 
-            notOnScreen = !renderDimensionReference.IntersectsWith(new Rectangle(X, Y, Width, Height));
+            _notOnScreen = !_renderDimensionReference.IntersectsWith(new Rectangle(X, Y, Width, Height));
 
-            if (oldNotOnScreen != notOnScreen)
+            if (oldNotOnScreen != _notOnScreen)
             {
                 if (oldVisible != Visible)
                 {
@@ -141,26 +141,26 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public virtual void Delete()
         {
-            if (!deleted)
+            if (!_deleted)
             {
                 RemoveFromLayer();
-                deleted = true;
-                visible = false;
-                visibleRequest = false;
+                _deleted = true;
+                _visible = false;
+                _visibleRequest = false;
             }
         }
 
         public int X
         {
-            get => x;
+            get => _x;
             set
             {
-                if (x == value)
+                if (_x == value)
                     return;
 
-                x = value;
+                _x = value;
 
-                if (!deleted)
+                if (!_deleted)
                 {
                     if (!CheckOnScreen())
                         UpdatePosition();
@@ -170,15 +170,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public int Y
         {
-            get => y;
+            get => _y;
             set
             {
-                if (y == value)
+                if (_y == value)
                     return;
 
-                y = value;
+                _y = value;
 
-                if (!deleted)
+                if (!_deleted)
                 {
                     if (!CheckOnScreen())
                         UpdatePosition();

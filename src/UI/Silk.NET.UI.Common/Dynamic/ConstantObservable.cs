@@ -4,7 +4,7 @@ namespace Silk.NET.UI
 {
     internal class ConstantObservable<T> : Observable<T>, IObservableStatusProvider
     {
-        private T value;
+        private T _value;
 
         bool IObservableStatusProvider.HasValue => true;
         bool IObservableStatusProvider.Errored => false;
@@ -12,12 +12,12 @@ namespace Silk.NET.UI
 
         internal ConstantObservable(T value)
         {
-            this.value = value;
+            _value = value;
         }
 
         public override Subscription<T> Subscribe(Action<T> next, Action<Exception> error = null, Action complete = null)
         {
-            next?.Invoke(value);
+            next?.Invoke(_value);
             complete?.Invoke();
 
             return new Subscription<T>(null, null);

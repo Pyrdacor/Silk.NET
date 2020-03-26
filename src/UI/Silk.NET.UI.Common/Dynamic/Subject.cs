@@ -8,47 +8,47 @@ namespace Silk.NET.UI
     /// </summary>
     public class Subject<T> : Observable<T>, IObserver<T>, IObservableStatusProvider
     {
-        protected T currentValue = default(T);
-        private Exception errorException = null;
-        protected bool hasValue = false;
-        protected bool errored = false;
-        protected bool completed = false;
+        protected T _currentValue = default(T);
+        private Exception _errorException = null;
+        protected bool _hasValue = false;
+        protected bool _errored = false;
+        protected bool _completed = false;
 
-        internal T CurrentValue => currentValue;
-        internal Exception ErrorException => errorException;
-        bool IObservableStatusProvider.HasValue => hasValue;
-        bool IObservableStatusProvider.Errored => errored;
-        bool IObservableStatusProvider.Completed => completed;
+        internal T CurrentValue => _currentValue;
+        internal Exception ErrorException => _errorException;
+        bool IObservableStatusProvider.HasValue => _hasValue;
+        bool IObservableStatusProvider.Errored => _errored;
+        bool IObservableStatusProvider.Completed => _completed;
 
         public virtual void Next(T value)
         {
-            if (completed)
+            if (_completed)
                 return;
 
-            currentValue = value;
-            hasValue = true;
+            _currentValue = value;
+            _hasValue = true;
 
-            CallNextActions(currentValue);
+            CallNextActions(_currentValue);
         }
 
         public virtual void Error(Exception error)
         {
-            if (completed)
+            if (_completed)
                 return;
 
-            hasValue = false;
-            errorException = error;
-            errored = true;
-            completed = true;
+            _hasValue = false;
+            _errorException = error;
+            _errored = true;
+            _completed = true;
             CallErrorActions(error);
         }
 
         public virtual void Complete()
         {
-            if (completed)
+            if (_completed)
                 return;
 
-            completed = true;
+            _completed = true;
             CallCompleteActions();
         }
 

@@ -4,19 +4,19 @@ namespace Silk.NET.UI
 {
     internal class Subscriber<T> : IObserver<T>
     {
-        protected Action<T> nextAction = null;
-        protected Action<Exception> errorAction = null;
-        protected Action completeAction = null;
+        protected Action<T> _nextAction = null;
+        protected Action<Exception> _errorAction = null;
+        protected Action _completeAction = null;
 
         public Subscriber(Action<T> next, Action<Exception> error = null, Action complete = null)
         {
-            nextAction = next;
-            errorAction = error;
-            completeAction = complete;
+            _nextAction = next;
+            _errorAction = error;
+            _completeAction = complete;
         }
 
-        public void Next(T value) => nextAction?.Invoke(value);
-        public void Error(Exception exception) => errorAction?.Invoke(exception);
-        public void Complete() => completeAction?.Invoke();
+        public void Next(T value) => _nextAction?.Invoke(value);
+        public void Error(Exception exception) => _errorAction?.Invoke(exception);
+        public void Complete() => _completeAction?.Invoke();
     }
 }

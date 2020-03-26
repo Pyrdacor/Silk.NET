@@ -13,6 +13,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
         public static readonly int GLSLVersionMajor = 0;
         public static readonly int GLSLVersionMinor = 0;
         public static readonly GL Gl = null;
+        public static bool ShadersAvailable => OpenGLVersionMajor >= 2 && GLSLVersionMajor > 0;
+
+        private static Stack<Matrix4x4> _projectionMatrixStack = new Stack<Matrix4x4>();
+        private static Stack<Matrix4x4> _modelViewMatrixStack = new Stack<Matrix4x4>();
+        private static Stack<Matrix4x4> _unzoomedModelViewMatrixStack = new Stack<Matrix4x4>();
 
         static State()
         {
@@ -46,48 +51,42 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
         }
 
-        public static bool ShadersAvailable => OpenGLVersionMajor >= 2 && GLSLVersionMajor > 0;
-
-        static Stack<Matrix4x4> projectionMatrixStack = new Stack<Matrix4x4>();
-        static Stack<Matrix4x4> modelViewMatrixStack = new Stack<Matrix4x4>();
-        static Stack<Matrix4x4> unzoomedModelViewMatrixStack = new Stack<Matrix4x4>();
-
         public static void PushProjectionMatrix(Matrix4x4 matrix)
         {
-            projectionMatrixStack.Push(matrix);
+            _projectionMatrixStack.Push(matrix);
         }
 
         public static void PushModelViewMatrix(Matrix4x4 matrix)
         {
-            modelViewMatrixStack.Push(matrix);
+            _modelViewMatrixStack.Push(matrix);
         }
 
         public static void PushUnzoomedModelViewMatrix(Matrix4x4 matrix)
         {
-            unzoomedModelViewMatrixStack.Push(matrix);
+            _unzoomedModelViewMatrixStack.Push(matrix);
         }
 
         public static Matrix4x4 PopProjectionMatrix()
         {
-            return projectionMatrixStack.Pop();
+            return _projectionMatrixStack.Pop();
         }
 
         public static Matrix4x4 PopModelViewMatrix()
         {
-            return modelViewMatrixStack.Pop();
+            return _modelViewMatrixStack.Pop();
         }
 
         public static Matrix4x4 PopUnzoomedModelViewMatrix()
         {
-            return unzoomedModelViewMatrixStack.Pop();
+            return _unzoomedModelViewMatrixStack.Pop();
         }
 
         public static void RestoreProjectionMatrix(Matrix4x4 matrix)
         {
-            if (projectionMatrixStack.Contains(matrix))
+            if (_projectionMatrixStack.Contains(matrix))
             {
                 while (CurrentProjectionMatrix != matrix)
-                    projectionMatrixStack.Pop();
+                    _projectionMatrixStack.Pop();
             }
             else
                 PushProjectionMatrix(matrix);
@@ -95,10 +94,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public static void RestoreModelViewMatrix(Matrix4x4 matrix)
         {
-            if (modelViewMatrixStack.Contains(matrix))
+            if (_modelViewMatrixStack.Contains(matrix))
             {
                 while (CurrentModelViewMatrix != matrix)
-                    modelViewMatrixStack.Pop();
+                    _modelViewMatrixStack.Pop();
             }
             else
                 PushModelViewMatrix(matrix);
@@ -106,10 +105,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public static void RestoreUnzoomedModelViewMatrix(Matrix4x4 matrix)
         {
-            if (unzoomedModelViewMatrixStack.Contains(matrix))
+            if (_unzoomedModelViewMatrixStack.Contains(matrix))
             {
                 while (CurrentUnzoomedModelViewMatrix != matrix)
-                    unzoomedModelViewMatrixStack.Pop();
+                    _unzoomedModelViewMatrixStack.Pop();
             }
             else
                 PushUnzoomedModelViewMatrix(matrix);
@@ -117,12 +116,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public static void ClearMatrices()
         {
-            projectionMatrixStack.Clear();
-            modelViewMatrixStack.Clear();
+            _projectionMatrixStack.Clear();
+            _modelViewMatrixStack.Clear();
         }
 
-        public static Matrix4x4? CurrentProjectionMatrix => projectionMatrixStack.Count == 0 ? (Matrix4x4?)null : projectionMatrixStack.Peek();
-        public static Matrix4x4? CurrentModelViewMatrix => modelViewMatrixStack.Count == 0 ? (Matrix4x4?)null : modelViewMatrixStack.Peek();
-        public static Matrix4x4? CurrentUnzoomedModelViewMatrix => unzoomedModelViewMatrixStack.Count == 0 ? (Matrix4x4?)null : unzoomedModelViewMatrixStack.Peek();
+        public static Matrix4x4? CurrentProjectionMatrix => _projectionMatrixStack.Count == 0 ? (Matrix4x4?)null : _projectionMatrixStack.Peek();
+        public static Matrix4x4? CurrentModelViewMatrix => _modelViewMatrixStack.Count == 0 ? (Matrix4x4?)null : _modelViewMatrixStack.Peek();
+        public static Matrix4x4? CurrentUnzoomedModelViewMatrix => _unzoomedModelViewMatrixStack.Count == 0 ? (Matrix4x4?)null : _unzoomedModelViewMatrixStack.Peek();
     }
 }

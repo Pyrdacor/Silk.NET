@@ -8,7 +8,7 @@ namespace Silk.NET.UI
     {
         internal Component Component { get; private set; }
         public string Name { get; }
-        private readonly List<ComponentBinder> componentBinders = new List<ComponentBinder>();
+        private readonly List<ComponentBinder> _componentBinders = new List<ComponentBinder>();
 
         protected Template([CallerMemberName] string name = null)
         {
@@ -25,7 +25,7 @@ namespace Silk.NET.UI
 
         internal void Bind()
         {
-            foreach (var componentBinder in componentBinders)
+            foreach (var componentBinder in _componentBinders)
                 componentBinder.Bind(Component);
         }
 
@@ -41,7 +41,7 @@ namespace Silk.NET.UI
 
         protected void AddMultiple(string componentTypeName, Observable<int> count, Func<int, string> idProvider = null)
         {
-            componentBinders.Add(new MultipleComponentBinder(count, componentTypeName, idProvider));
+            _componentBinders.Add(new MultipleComponentBinder(count, componentTypeName, idProvider));
         }
 
         protected void AddForEach<T>(string componentTypeName, IEnumerable<T> collection, Func<T, string> idProvider = null)
@@ -51,7 +51,7 @@ namespace Silk.NET.UI
 
         protected void AddForEach<T>(string componentTypeName, Observable<IEnumerable<T>> collection, Func<T, string> idProvider = null)
         {
-            componentBinders.Add(new MultipleComponentBinder<T>(collection, componentTypeName, idProvider));
+            _componentBinders.Add(new MultipleComponentBinder<T>(collection, componentTypeName, idProvider));
         }
 
         protected AddIfElse AddIf(string componentTypeName, bool condition, string id = null)
@@ -62,19 +62,19 @@ namespace Silk.NET.UI
         protected AddIfElse AddIf(string componentTypeName, Observable<bool> condition, string id = null)
         {
             var conditionalComponentBinder = new ConditionalComponentBinder(condition, componentTypeName, id);
-            componentBinders.Add(conditionalComponentBinder);
+            _componentBinders.Add(conditionalComponentBinder);
             return new AddIfElse(this, conditionalComponentBinder.GetElseObservable());
         }
 
         public class AddIfElse
         {
-            private Template template;
-            private Observable<bool> elseCondition;
+            private Template _template;
+            private Observable<bool> _elseCondition;
 
             internal AddIfElse(Template template, Observable<bool> elseCondition)
             {
-                this.template = template;
-                this.elseCondition = elseCondition;
+                _template = template;
+                _elseCondition = elseCondition;
             }
 
             public AddIfElse ElseAddIf(string componentTypeName, bool condition, string id = null)
@@ -84,15 +84,15 @@ namespace Silk.NET.UI
 
             public AddIfElse ElseAddIf(string componentTypeName, Observable<bool> condition, string id = null)
             {
-                var totalCondition = condition.Merge(elseCondition, (a, b) => a && b);
+                var totalCondition = condition.Merge(_elseCondition, (a, b) => a && b);
                 var conditionalComponentBinder = new ConditionalComponentBinder(totalCondition, componentTypeName, id);
-                template.componentBinders.Add(conditionalComponentBinder);
-                return new AddIfElse(template, conditionalComponentBinder.GetElseObservable());
+                _template._componentBinders.Add(conditionalComponentBinder);
+                return new AddIfElse(_template, conditionalComponentBinder.GetElseObservable());
             }
 
             public void ElseAdd(string componentTypeName, string id = null)
             {
-                template.componentBinders.Add(new ConditionalComponentBinder(elseCondition, componentTypeName, id));
+                _template._componentBinders.Add(new ConditionalComponentBinder(_elseCondition, componentTypeName, id));
             }
         }
     }

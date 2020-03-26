@@ -7,14 +7,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
     internal class IndexBuffer : BufferObject<IndexType>
     {
-        uint index = 0;
-        bool disposed = false;
-        readonly object bufferLock = new object();
-        private IndexType[] buffer = null;
-        bool changedSinceLastCreation = true;
-        int size = 0;
+        private uint _index = 0;
+        private bool _disposed = false;
+        private readonly object _bufferLock = new object();
+        private IndexType[] _buffer = null;
+        private bool _changedSinceLastCreation = true;
+        private int _size = 0;
 
-        public override int Size => size;
+        public override int Size => _size;
 
         public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedInt;
 
@@ -22,22 +22,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public IndexBuffer()
         {
-            index = State.Gl.GenBuffer();
+            _index = State.Gl.GenBuffer();
         }
 
         public override void Bind()
         {
-            if (disposed)
+            if (_disposed)
                 throw new Exception("Tried to bind a disposed buffer.");
 
-            State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, _index);
 
             Recreate(); // ensure that the data is up to date
         }
 
         public void Unbind()
         {
-            if (disposed)
+            if (_disposed)
                 return;
 
             State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
@@ -45,14 +45,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void Recreate() // is only called when the buffer is bound (see Bind())
         {
-            if (!changedSinceLastCreation || buffer == null)
+            if (!_changedSinceLastCreation || _buffer == null)
                 return;
 
-            lock (bufferLock)
+            lock (_bufferLock)
             {
                 unsafe
                 {
-                    fixed (IndexType* ptr = &buffer[0])
+                    fixed (IndexType* ptr = &_buffer[0])
                     {
                         State.Gl.BufferData(GLEnum.ElementArrayBuffer, (uint)(Size * sizeof(IndexType)),
                             ptr, GLEnum.StaticDraw);
@@ -60,24 +60,24 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 }
             }
 
-            changedSinceLastCreation = false;
+            _changedSinceLastCreation = false;
         }
 
         internal override bool RecreateUnbound()
         {
-            if (!changedSinceLastCreation || buffer == null)
+            if (!_changedSinceLastCreation || _buffer == null)
                 return false;
 
-            if (disposed)
+            if (_disposed)
                 throw new InvalidOperationException("Tried to recreate a disposed buffer.");
 
-            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, _index);
 
-            lock (bufferLock)
+            lock (_bufferLock)
             {
                 unsafe
                 {
-                    fixed (IndexType* ptr = &buffer[0])
+                    fixed (IndexType* ptr = &_buffer[0])
                     {
                         State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(IndexType)),
                             ptr, GLEnum.StaticDraw);
@@ -85,7 +85,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 }
             }
 
-            changedSinceLastCreation = false;
+            _changedSinceLastCreation = false;
 
             return true;
         }
@@ -98,19 +98,19 @@ namespace Silk.NET.UI.Renderer.OpenGL
             int arrayIndex = quadIndex * 6; // 2 triangles with 3 vertices each
             var vertexIndex = (IndexType)(quadIndex * 4); // 4 different vertices form a quad
 
-            if (size <= arrayIndex + 6)
+            if (_size <= arrayIndex + 6)
             {
-                buffer = EnsureBufferSize(buffer, arrayIndex + 6, out _);
+                _buffer = EnsureBufferSize(_buffer, arrayIndex + 6, out _);
 
-                buffer[arrayIndex++] = vertexIndex + 0;
-                buffer[arrayIndex++] = vertexIndex + 1;
-                buffer[arrayIndex++] = vertexIndex + 2;
-                buffer[arrayIndex++] = vertexIndex + 3;
-                buffer[arrayIndex++] = vertexIndex + 0;
-                buffer[arrayIndex++] = vertexIndex + 2;
+                _buffer[arrayIndex++] = vertexIndex + 0;
+                _buffer[arrayIndex++] = vertexIndex + 1;
+                _buffer[arrayIndex++] = vertexIndex + 2;
+                _buffer[arrayIndex++] = vertexIndex + 3;
+                _buffer[arrayIndex++] = vertexIndex + 0;
+                _buffer[arrayIndex++] = vertexIndex + 2;
 
-                size = arrayIndex;
-                changedSinceLastCreation = true;
+                _size = arrayIndex;
+                _changedSinceLastCreation = true;
             }
         }
 
@@ -119,15 +119,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (offset > int.MaxValue - numVertices)
                 throw new Exceptions.InsufficientResourcesException("Too many polygons to render.");
 
-            if (size < offset + numVertices)
+            if (_size < offset + numVertices)
             {
-                buffer = EnsureBufferSize(buffer, (int)offset + numVertices, out _);
+                _buffer = EnsureBufferSize(_buffer, (int)offset + numVertices, out _);
 
                 for (int i = 0; i < numVertices; ++i)
-                    buffer[offset] = (IndexType)offset++;
+                    _buffer[offset] = (IndexType)offset++;
 
-                size = buffer.Length;
-                changedSinceLastCreation = true;
+                _size = _buffer.Length;
+                _changedSinceLastCreation = true;
             }
         }
 
@@ -138,29 +138,29 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
                     State.Gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
 
-                    if (index != 0)
+                    if (_index != 0)
                     {
-                        State.Gl.DeleteBuffer(index);
+                        State.Gl.DeleteBuffer(_index);
 
-                        if (buffer != null)
+                        if (_buffer != null)
                         {
-                            lock (bufferLock)
+                            lock (_bufferLock)
                             {
-                                buffer = null;
+                                _buffer = null;
                             }
                         }
 
-                        size = 0;
-                        index = 0;
+                        _size = 0;
+                        _index = 0;
                     }
 
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }

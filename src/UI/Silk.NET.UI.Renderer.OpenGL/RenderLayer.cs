@@ -19,8 +19,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
     internal class RenderLayer : IDisposable
     {
-        private bool disposed = false;
-        private Texture texture = null;
+        private bool _disposed = false;
+        private Texture _texture = null;
+        private readonly RenderBuffer _renderBuffer = null;
 
         public Layer Layer { get; } = Layer.None;
 
@@ -60,13 +61,13 @@ namespace Silk.NET.UI.Renderer.OpenGL
             set;
         } = 0.0f;
 
-        readonly RenderBuffer renderBuffer = null;
+
         public RenderLayer(Layer layer, Texture texture, Color? colorKey = null, Color? colorOverlay = null)
         {
             if (layer == Layer.None)
                 throw new ArgumentException($"Layer `{nameof(Layer.None)}` can not be used as a type of real render layers.");
 
-            renderBuffer = new RenderBuffer(layer == Layer.Images,
+            _renderBuffer = new RenderBuffer(layer == Layer.Images,
                 layer switch
                 {
                     Layer.Triangles => Shape.TriangleVertices,
@@ -82,7 +83,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 });
 
             Layer = layer;
-            this.texture = texture;
+            _texture = texture;
             ColorKey = colorKey;
             ColorOverlay = colorOverlay;
         }
@@ -96,7 +97,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             if (Layer == Layer.Images)
             {
-                if (texture == null) // TODO: error?
+                if (_texture == null) // TODO: error?
                     return;
 
                 var textureShader = TextureShader.Instance;
@@ -104,9 +105,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 textureShader.UpdateMatrices(SupportZoom);
                 textureShader.SetSampler(0); // we use texture unit 0 -> see Gl.ActiveTexture below
                 State.Gl.ActiveTexture(GLEnum.Texture0);
-                texture.Bind();
+                _texture.Bind();
 
-                textureShader.SetAtlasSize((uint)texture.Width, (uint)texture.Height);
+                textureShader.SetAtlasSize((uint)_texture.Width, (uint)_texture.Height);
                 textureShader.SetZ(Z);
 
                 if (ColorKey == null)
@@ -127,42 +128,42 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 colorShader.SetZ(Z);
             }
             
-            renderBuffer.Render();
+            _renderBuffer.Render();
         }
 
         public int GetDrawIndex(Sprite sprite)
         {
-            return renderBuffer.GetDrawIndex(sprite, PositionTransformation, SizeTransformation);
+            return _renderBuffer.GetDrawIndex(sprite, PositionTransformation, SizeTransformation);
         }
 
         public int GetDrawIndex(Shape shape)
         {
-            return renderBuffer.GetDrawIndex(shape, PositionTransformation, SizeTransformation);
+            return _renderBuffer.GetDrawIndex(shape, PositionTransformation, SizeTransformation);
         }
 
         public void FreeDrawIndex(int index)
         {
-            renderBuffer.FreeDrawIndex(index);
+            _renderBuffer.FreeDrawIndex(index);
         }
 
         public void UpdatePosition(int index, Sprite sprite)
         {
-            renderBuffer.UpdatePosition(index, sprite, PositionTransformation, SizeTransformation);
+            _renderBuffer.UpdatePosition(index, sprite, PositionTransformation, SizeTransformation);
         }
 
         public void UpdatePosition(int index, Shape shape)
         {
-            renderBuffer.UpdatePosition(index, shape, PositionTransformation, SizeTransformation);
+            _renderBuffer.UpdatePosition(index, shape, PositionTransformation, SizeTransformation);
         }
 
         public void UpdateTextureAtlasOffset(int index, Sprite sprite)
         {
-            renderBuffer.UpdateTextureAtlasOffset(index, sprite);
+            _renderBuffer.UpdateTextureAtlasOffset(index, sprite);
         }
 
         public void UpdateDisplayLayer(int index, uint displayLayer)
         {
-            renderBuffer.UpdateDisplayLayer(index, displayLayer);
+            _renderBuffer.UpdateDisplayLayer(index, displayLayer);
         }
 
         public void Dispose()
@@ -172,14 +173,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
-                    renderBuffer?.Dispose();
-                    texture?.Dispose();
+                    _renderBuffer?.Dispose();
+                    _texture?.Dispose();
                     Visible = false;
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }

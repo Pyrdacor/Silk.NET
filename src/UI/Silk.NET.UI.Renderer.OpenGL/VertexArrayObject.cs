@@ -7,22 +7,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
 	// VAO
     internal class VertexArrayObject : IDisposable
     {
-    	uint index = 0;
-        readonly Dictionary<string, PositionBuffer> positionBuffers = new Dictionary<string, PositionBuffer>(4);
-        readonly Dictionary<string, ColorBuffer> colorBuffers = new Dictionary<string, ColorBuffer>(4);
-        readonly Dictionary<string, LayerBuffer> layerBuffers = new Dictionary<string, LayerBuffer>(1);
-        readonly Dictionary<string, IndexBuffer> indexBuffers = new Dictionary<string, IndexBuffer>(4);
-        readonly Dictionary<string, int> bufferLocations = new Dictionary<string, int>();
-        bool disposed = false;
-        bool buffersAreBound = false;
-        ShaderProgram program = null;
-        object vaoLock = new object();
+    	private uint index = 0;
+        private readonly Dictionary<string, PositionBuffer> _positionBuffers = new Dictionary<string, PositionBuffer>(4);
+        private readonly Dictionary<string, ColorBuffer> _colorBuffers = new Dictionary<string, ColorBuffer>(4);
+        private readonly Dictionary<string, LayerBuffer> _layerBuffers = new Dictionary<string, LayerBuffer>(1);
+        private readonly Dictionary<string, IndexBuffer> _indexBuffers = new Dictionary<string, IndexBuffer>(4);
+        private readonly Dictionary<string, int> _bufferLocations = new Dictionary<string, int>();
+        private bool _disposed = false;
+        private bool _buffersAreBound = false;
+        private ShaderProgram _program = null;
+        private object _vaoLock = new object();
 
         public static VertexArrayObject ActiveVAO { get; private set; } = null;
 
         public VertexArrayObject(ShaderProgram program)
         {
-            this.program = program;
+            _program = program;
 
         	Create();
         }
@@ -34,102 +34,102 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void Lock()
         {
-            Monitor.Enter(vaoLock);
+            Monitor.Enter(_vaoLock);
         }
 
         public void Unlock()
         {
-            Monitor.Exit(vaoLock);
+            Monitor.Exit(_vaoLock);
         }
 
         public void AddBuffer(string name, PositionBuffer buffer)
         {
-            positionBuffers.Add(name, buffer);
+            _positionBuffers.Add(name, buffer);
         }
 
         public void AddBuffer(string name, ColorBuffer buffer)
         {
-            colorBuffers.Add(name, buffer);
+            _colorBuffers.Add(name, buffer);
         }
 
         public void AddBuffer(string name, LayerBuffer buffer)
         {
-            layerBuffers.Add(name, buffer);
+            _layerBuffers.Add(name, buffer);
         }
 
         public void AddBuffer(string name, IndexBuffer buffer)
         {
-            indexBuffers.Add(name, buffer);
+            _indexBuffers.Add(name, buffer);
         }
 
         public void BindBuffers()
         {
-            if (buffersAreBound)
+            if (_buffersAreBound)
                 return;
 
-            lock (vaoLock)
+            lock (_vaoLock)
             {
-                program.Use();
+                _program.Use();
                 InternalBind(true);
 
-                foreach (var buffer in positionBuffers)
+                foreach (var buffer in _positionBuffers)
                 {
-                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                    _bufferLocations[buffer.Key] = (int)_program.BindInputBuffer(buffer.Key, buffer.Value);
                 }
 
-                foreach (var buffer in colorBuffers)
+                foreach (var buffer in _colorBuffers)
                 {
-                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                    _bufferLocations[buffer.Key] = (int)_program.BindInputBuffer(buffer.Key, buffer.Value);
                 }
 
-                foreach (var buffer in layerBuffers)
+                foreach (var buffer in _layerBuffers)
                 {
-                    bufferLocations[buffer.Key] = (int)program.BindInputBuffer(buffer.Key, buffer.Value);
+                    _bufferLocations[buffer.Key] = (int)_program.BindInputBuffer(buffer.Key, buffer.Value);
                 }
 
-                foreach (var buffer in indexBuffers)
+                foreach (var buffer in _indexBuffers)
                 {
                     buffer.Value.Bind();
                 }
 
-                buffersAreBound = true;
+                _buffersAreBound = true;
             }
         }
 
         public void UnbindBuffers()
         {
-            if (!buffersAreBound)
+            if (!_buffersAreBound)
                 return;
 
-            lock (vaoLock)
+            lock (_vaoLock)
             {
-                program.Use();
+                _program.Use();
                 InternalBind(true);
 
-                foreach (var buffer in positionBuffers)
+                foreach (var buffer in _positionBuffers)
                 {
-                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                    bufferLocations[buffer.Key] = -1;
+                    _program.UnbindInputBuffer((uint)_bufferLocations[buffer.Key]);
+                    _bufferLocations[buffer.Key] = -1;
                 }
 
-                foreach (var buffer in colorBuffers)
+                foreach (var buffer in _colorBuffers)
                 {
-                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                    bufferLocations[buffer.Key] = -1;
+                    _program.UnbindInputBuffer((uint)_bufferLocations[buffer.Key]);
+                    _bufferLocations[buffer.Key] = -1;
                 }
 
-                foreach (var buffer in layerBuffers)
+                foreach (var buffer in _layerBuffers)
                 {
-                    program.UnbindInputBuffer((uint)bufferLocations[buffer.Key]);
-                    bufferLocations[buffer.Key] = -1;
+                    _program.UnbindInputBuffer((uint)_bufferLocations[buffer.Key]);
+                    _bufferLocations[buffer.Key] = -1;
                 }
 
-                foreach (var buffer in indexBuffers)
+                foreach (var buffer in _indexBuffers)
                 {
                     buffer.Value.Unbind();
                 }
 
-                buffersAreBound = false;
+                _buffersAreBound = false;
             }
         }
 
@@ -140,12 +140,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void InternalBind(bool bindOnly)
         {
-            lock (vaoLock)
+            lock (_vaoLock)
             {
                 if (ActiveVAO != this)
                 {
                     State.Gl.BindVertexArray(index);
-                    program.Use();
+                    _program.Use();
                 }
 
                 if (!bindOnly)
@@ -153,25 +153,25 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     bool buffersChanged = false;
 
                     // ensure that all buffers are up to date
-                    foreach (var buffer in positionBuffers)
+                    foreach (var buffer in _positionBuffers)
                     {
                         if (buffer.Value.RecreateUnbound())
                             buffersChanged = true;
                     }
 
-                    foreach (var buffer in colorBuffers)
+                    foreach (var buffer in _colorBuffers)
                     {
                         if (buffer.Value.RecreateUnbound())
                             buffersChanged = true;
                     }
 
-                    foreach (var buffer in layerBuffers)
+                    foreach (var buffer in _layerBuffers)
                     {
                         if (buffer.Value.RecreateUnbound())
                             buffersChanged = true;
                     }
 
-                    foreach (var buffer in indexBuffers)
+                    foreach (var buffer in _indexBuffers)
                     {
                         if (buffer.Value.RecreateUnbound())
                             buffersChanged = true;
@@ -209,7 +209,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -222,7 +222,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                         index = 0;
                     }
 
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }

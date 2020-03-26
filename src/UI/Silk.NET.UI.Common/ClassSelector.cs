@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,11 +6,11 @@ namespace Silk.NET.UI
     internal class ClassSelector : Selector
     {
         internal override int Priority => 10000;
-        private List<string> classes;
+        private List<string> _classes;
 
         public ClassSelector(params string[] classes)
         {
-            this.classes = new List<string>(classes);
+            _classes = new List<string>(classes);
         }
 
         protected override bool Match(Control control, SelectorPathNode path)
@@ -19,19 +18,19 @@ namespace Silk.NET.UI
             if (control.Classes.Count == 0)
                 return false;
                 
-            return classes.Any(clazz => control.Classes.Contains(clazz));
+            return _classes.Any(clazz => control.Classes.Contains(clazz));
         }
 
         public override bool Equals(Selector other)
         {
             var otherClassSelector = other as ClassSelector;
 
-            if (otherClassSelector == null || classes.Count != otherClassSelector.classes.Count)
+            if (otherClassSelector == null || _classes.Count != otherClassSelector._classes.Count)
                 return false;
 
-            for (int i = 0; i < classes.Count; ++i)
+            for (int i = 0; i < _classes.Count; ++i)
             {
-                if (classes[i] != otherClassSelector.classes[i])
+                if (_classes[i] != otherClassSelector._classes[i])
                     return false;
             }
 
@@ -44,7 +43,7 @@ namespace Silk.NET.UI
 
             hash = hash * 23 + Priority.GetHashCode();
 
-            foreach (var clazz in classes)
+            foreach (var clazz in _classes)
                 hash = hash * 23 + clazz.GetHashCode();
 
             return hash;

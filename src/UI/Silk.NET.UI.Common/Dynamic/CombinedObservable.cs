@@ -33,24 +33,24 @@ namespace Silk.NET.UI
             public T Value;
         }
 
-        private readonly Dictionary<Observable<T>, ObservableInfo> observables;
-        private readonly Dictionary<Observable<T>, Subscription<T>> subscriptions = new Dictionary<Observable<T>, Subscription<T>>();
-        private Func<IEnumerable<T>, U> mapper;
-        private Exception mostRecentError = null;
-        private bool replay = false;
-        private bool allowErrors = false;
-        private bool oneValuePerObservale = false;
-        private bool hasValue = false;
-        private bool errored = false;
-        private bool completed = false;
-        private CombinedType combinedNextType;
-        private CombinedType combinedCompleteType;
-        private U lastValue = default(U);
+        private readonly Dictionary<Observable<T>, ObservableInfo> _observables;
+        private readonly Dictionary<Observable<T>, Subscription<T>> _subscriptions = new Dictionary<Observable<T>, Subscription<T>>();
+        private Func<IEnumerable<T>, U> _mapper;
+        private Exception _mostRecentError = null;
+        private bool _replay = false;
+        private bool _allowErrors = false;
+        private bool _oneValuePerObservale = false;
+        private bool _hasValue = false;
+        private bool _errored = false;
+        private bool _completed = false;
+        private CombinedType _combinedNextType;
+        private CombinedType _combinedCompleteType;
+        private U _lastValue = default(U);
 
-        bool IObservableStatusProvider.HasValue => hasValue;
-        bool IObservableStatusProvider.Errored => errored;
-        bool IObservableStatusProvider.Completed => completed;
-        internal U LastValue => lastValue;
+        bool IObservableStatusProvider.HasValue => _hasValue;
+        bool IObservableStatusProvider.Errored => _errored;
+        bool IObservableStatusProvider.Completed => _completed;
+        internal U LastValue => _lastValue;
 
         /// <summary>
         /// Create a wrapper observable that handles a list of observables.
@@ -67,17 +67,17 @@ namespace Silk.NET.UI
         {
             if (observables.Length == 0)
             {
-                completed = true;
+                _completed = true;
                 return;
             }
 
-            this.mapper = mapper;
-            this.combinedNextType = combinedNextType;
-            this.combinedCompleteType = combinedCompleteType;
-            this.replay = replay;
-            this.allowErrors = allowErrors;
-            this.oneValuePerObservale = oneValuePerObservale;
-            this.observables = new Dictionary<Observable<T>, ObservableInfo>(observables.Length);
+            _mapper = mapper;
+            _combinedNextType = combinedNextType;
+            _combinedCompleteType = combinedCompleteType;
+            _replay = replay;
+            _allowErrors = allowErrors;
+            _oneValuePerObservale = oneValuePerObservale;
+            _observables = new Dictionary<Observable<T>, ObservableInfo>(observables.Length);
 
             foreach (var observable in observables)
             {
@@ -93,7 +93,7 @@ namespace Silk.NET.UI
                             state = ObservableState.Error;
                         else
                         {
-                            completed = true;
+                            _completed = true;
                             return;
                         }
                     }
@@ -103,18 +103,18 @@ namespace Silk.NET.UI
                         state = ObservableState.CompletedEmpty;
                 }
                 
-                this.observables.Add(observable, new ObservableInfo() { State = state });
-                subscriptions.Add(observable, observable.Subscribe(
+                _observables.Add(observable, new ObservableInfo() { State = state });
+                _subscriptions.Add(observable, observable.Subscribe(
                     value => {
-                        var observableInfo = this.observables[observable];
+                        var observableInfo = _observables[observable];
                         observableInfo.Value = value;
                         if (oneValuePerObservale)
                         {
                             observableInfo.State = ObservableState.Completed;
-                            if (subscriptions.ContainsKey(observable))
+                            if (_subscriptions.ContainsKey(observable))
                             {
-                                subscriptions[observable].Unsubscribe();
-                                subscriptions.Remove(observable);
+                                _subscriptions[observable].Unsubscribe();
+                                _subscriptions.Remove(observable);
                             }
                         }
                         else if (observableInfo.State == ObservableState.Empty)
@@ -122,43 +122,43 @@ namespace Silk.NET.UI
                         UpdateState();
                     },
                     error => {
-                        mostRecentError = error;
-                        this.observables[observable].State = ObservableState.Error;
+                        _mostRecentError = error;
+                        _observables[observable].State = ObservableState.Error;
                         UpdateState();
                     },
                     () => {
-                        var observableInfo = this.observables[observable];
+                        var observableInfo = _observables[observable];
                         if (observableInfo.State != ObservableState.Error)
                             observableInfo.State = observableInfo.State == ObservableState.HasValue ? ObservableState.Completed : ObservableState.CompletedEmpty;
                         UpdateState();
                     }
                 ));
-                if (subscriptions.ContainsKey(observable) && subscriptions[observable] == Subscription<T>.Empty)
-                    subscriptions.Remove(observable);
+                if (_subscriptions.ContainsKey(observable) && _subscriptions[observable] == Subscription<T>.Empty)
+                    _subscriptions.Remove(observable);
             }
         }
 
         public override Subscription<U> Subscribe(Action<U> next, Action<Exception> error = null, Action complete = null)
         {
-            if (completed)
+            if (_completed)
                 return Subscription<U>.Empty;
 
-            if (observables.Count == 0)
+            if (_observables.Count == 0)
             {
                 // This case happens if an error exists already
                 // in the starting observables and errors are not allowed.
                 // As there is no subscription on creating the observable
                 // we will wait for the first subscription, pass the error
                 // to the first subscriber and complete the observable.
-                error?.Invoke(mostRecentError);
-                completed = true;
+                error?.Invoke(_mostRecentError);
+                _completed = true;
                 return Subscription<U>.Empty;
             }
 
             var subscription = base.Subscribe(next, error, complete);
 
-            if (replay && hasValue)
-                CallNextActions(lastValue);
+            if (_replay && _hasValue)
+                CallNextActions(_lastValue);
 
             return subscription;
         }
@@ -168,22 +168,22 @@ namespace Silk.NET.UI
             int numWithValue = 0;
             int numCompleted = 0;
 
-            foreach (var observable in observables)
+            foreach (var observable in _observables)
             {
                 var state = observable.Value.State;
 
                 if (state == ObservableState.Error)
                 {
-                    if (!allowErrors)
+                    if (!_allowErrors)
                     {
-                        this.hasValue = false;
-                        this.errored = true;
-                        this.completed = true;                    
-                        CallErrorActions(mostRecentError);
+                        _hasValue = false;
+                        _errored = true;
+                        _completed = true;                    
+                        CallErrorActions(_mostRecentError);
                         Clear();
                         return;
                     }
-                    else if (combinedNextType == CombinedType.All && combinedCompleteType == CombinedType.All)
+                    else if (_combinedNextType == CombinedType.All && _combinedCompleteType == CombinedType.All)
                     {
                         // no need to look any further -> can never call next nor complete with an error
                         return;
@@ -194,11 +194,11 @@ namespace Silk.NET.UI
                 {
                     bool hasValue = state == ObservableState.HasValue || state == ObservableState.Completed;
 
-                    if (combinedNextType == CombinedType.All && !hasValue)
+                    if (_combinedNextType == CombinedType.All && !hasValue)
                         numWithValue = -1; // no further checking
                     else if (hasValue)
                     {
-                        if (combinedNextType == CombinedType.All)
+                        if (_combinedNextType == CombinedType.All)
                             ++numWithValue;
                         else
                             numWithValue = int.MaxValue; // no further checking needed
@@ -209,11 +209,11 @@ namespace Silk.NET.UI
                 {
                     bool completed = state == ObservableState.Completed || state == ObservableState.CompletedEmpty;
 
-                    if (combinedCompleteType == CombinedType.All && !completed)
+                    if (_combinedCompleteType == CombinedType.All && !completed)
                         numCompleted = -1; // no further checking
                     else if (completed)
                     {
-                        if (combinedCompleteType == CombinedType.All)
+                        if (_combinedCompleteType == CombinedType.All)
                             ++numCompleted;
                         else
                             numCompleted = int.MaxValue; // no further checking needed
@@ -224,16 +224,16 @@ namespace Silk.NET.UI
                     break; // no need to look any further
             }
 
-            if (numWithValue >= observables.Count)
+            if (numWithValue >= _observables.Count)
             {
-                lastValue = mapper(observables.Select(o => o.Value.Value));
-                hasValue = true;
-                CallNextActions(lastValue);
+                _lastValue = _mapper(_observables.Select(o => o.Value.Value));
+                _hasValue = true;
+                CallNextActions(_lastValue);
             }
 
-            if (numCompleted >= observables.Count)
+            if (numCompleted >= _observables.Count)
             {
-                this.completed = true;
+                _completed = true;
                 CallCompleteActions();
                 Clear();
             }
@@ -241,12 +241,12 @@ namespace Silk.NET.UI
 
         private void Clear()
         {
-            foreach (var subscription in subscriptions.Values)
+            foreach (var subscription in _subscriptions.Values)
                 subscription.Unsubscribe();
 
-            subscriptions.Clear();
-            observables.Clear();
-            lastValue = default(U);
+            _subscriptions.Clear();
+            _observables.Clear();
+            _lastValue = default(U);
         }
     }
 }

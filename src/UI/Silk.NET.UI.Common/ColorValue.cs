@@ -36,11 +36,11 @@ namespace Silk.NET.UI
         private static readonly Regex HexArgbShortPattern = new Regex(@"^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex HexRgbShortPattern = new Regex(@"^#([0-9a-f])([0-9a-f])([0-9a-f])$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private Color color;
+        private Color _color;
 
         public bool Equals(ColorValue other)
         {
-            return color.Equals(other.color);
+            return _color.Equals(other._color);
         }
 
         public override bool Equals(object obj)
@@ -53,7 +53,7 @@ namespace Silk.NET.UI
 
         public override int GetHashCode()
         {
-            return color.GetHashCode();
+            return _color.GetHashCode();
         }
 
         public static bool operator ==(ColorValue lhs, ColorValue rhs)
@@ -68,17 +68,17 @@ namespace Silk.NET.UI
 
         public ColorValue(Color color)
         {
-            this.color = color;
+            _color = color;
         }
         
         public ColorValue(byte r, byte g, byte b, byte a = 255)
         {
-            color = Color.FromArgb(r, g, b, a);
+            _color = Color.FromArgb(r, g, b, a);
         }
 
         public ColorValue(int color)
         {
-            this.color = Color.FromArgb(color);
+            _color = Color.FromArgb(color);
         }
 
         public static implicit operator ColorValue(Color value)
@@ -93,7 +93,7 @@ namespace Silk.NET.UI
 
         public static implicit operator Color(ColorValue value)
         {
-            return value.color;
+            return value._color;
         }
 
         public static implicit operator ColorValue(string value)
@@ -201,7 +201,7 @@ namespace Silk.NET.UI
 
         public override string ToString()
         {
-            return color.ToString();
+            return _color.ToString();
         }
     }
 }

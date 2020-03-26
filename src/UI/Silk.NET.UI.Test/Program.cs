@@ -6,13 +6,13 @@ namespace Silk.NET.UI.Test
 {
     class Button : Control
     {
-        private int? drawReference = null;
+        private int? _drawReference = null;
 
         public Button(string? id) : base(id) { }
 
         protected override void OnRender(RenderEventArgs args)
         {
-            drawReference = args.Renderer.FillRectangle(drawReference, 20, 20, 100, 60, Color.LightGray);
+            _drawReference = args.Renderer.FillRectangle(_drawReference, 20, 20, 100, 60, Color.LightGray);
 
             base.OnRender(args);
         }

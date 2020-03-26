@@ -2,40 +2,40 @@ namespace Silk.NET.UI
 {
     internal class ConditionalComponentBinder : ComponentBinder
     {
-        private Component boundComponent;
-        private Observable<bool> condition;
-        private string componentTypeName;
-        private string componentId;
+        private Component _boundComponent;
+        private Observable<bool> _condition;
+        private string _componentTypeName;
+        private string _componentId;
 
         public ConditionalComponentBinder(Observable<bool> condition, string componentTypeName, string componentId)
         {
-            this.condition = condition;
-            this.componentTypeName = componentTypeName;
-            this.componentId = componentId;
+            _condition = condition;
+            _componentTypeName = componentTypeName;
+            _componentId = componentId;
         }
 
         public Observable<bool> GetElseObservable()
         {
-            return condition.Map(c => !c);
+            return _condition.Map(c => !c);
         }
 
         public override void Bind(Component parentComponent)
         {
-            condition.Subscribe(result =>
+            _condition.Subscribe(result =>
             {
                 if (result)
                 {
-                    if (boundComponent == null)
-                        boundComponent = ComponentManager.InitializeComponent(componentTypeName, componentId);
+                    if (_boundComponent == null)
+                        _boundComponent = ComponentManager.InitializeComponent(_componentTypeName, _componentId);
                     
-                    boundComponent.AddTo(parentComponent);
+                    _boundComponent.AddTo(parentComponent);
                 }
                 else
                 {
-                    if (boundComponent != null)
+                    if (_boundComponent != null)
                     {
-                        boundComponent.DestroyControl();
-                        boundComponent = null;
+                        _boundComponent.DestroyControl();
+                        _boundComponent = null;
                     }
                 }
             });

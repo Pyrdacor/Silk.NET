@@ -7,46 +7,46 @@ namespace Silk.NET.UI.Renderer.OpenGL
 {
     internal class ControlRenderer : IControlRenderer
     {
-        private readonly Dictionary<Layer, RenderLayer> renderLayers = new Dictionary<Layer, RenderLayer>();
-        private readonly Dictionary<int, IRenderNode> renderNodes = new Dictionary<int, IRenderNode>();
-        private readonly IndexPool renderNodeIndexPool = new IndexPool();
-        private readonly Context context;
-        private readonly RenderDimensionReference renderDimensionReference;
-        private readonly TextureAtlas textureAtlas = new TextureAtlas();
-        private uint displayLayer = 0;
+        private readonly Dictionary<Layer, RenderLayer> _renderLayers = new Dictionary<Layer, RenderLayer>();
+        private readonly Dictionary<int, IRenderNode> _renderNodes = new Dictionary<int, IRenderNode>();
+        private readonly IndexPool _renderNodeIndexPool = new IndexPool();
+        private readonly Context _context;
+        private readonly RenderDimensionReference _renderDimensionReference;
+        private readonly TextureAtlas _textureAtlas = new TextureAtlas();
+        private uint _displayLayer = 0;
 
         public ControlRenderer(RenderDimensionReference renderDimensionReference)
         {
-            this.renderDimensionReference = renderDimensionReference;
-            context = new Context(renderDimensionReference);
+            _renderDimensionReference = renderDimensionReference;
+            _context = new Context(renderDimensionReference);
 
-            renderLayers.Add(Layer.Controls, new RenderLayer(Layer.Controls, null));
-            renderLayers.Add(Layer.Images, new RenderLayer(Layer.Images, textureAtlas.AtlasTexture));
-            renderLayers.Add(Layer.Triangles, new RenderLayer(Layer.Triangles, null));
-            renderLayers.Add(Layer.Ellipsis, new RenderLayer(Layer.Ellipsis, null));
-            renderLayers.Add(Layer.RoundRects, new RenderLayer(Layer.RoundRects, null));
+            _renderLayers.Add(Layer.Controls, new RenderLayer(Layer.Controls, null));
+            _renderLayers.Add(Layer.Images, new RenderLayer(Layer.Images, _textureAtlas.AtlasTexture));
+            _renderLayers.Add(Layer.Triangles, new RenderLayer(Layer.Triangles, null));
+            _renderLayers.Add(Layer.Ellipsis, new RenderLayer(Layer.Ellipsis, null));
+            _renderLayers.Add(Layer.RoundRects, new RenderLayer(Layer.RoundRects, null));
         }
 
         public void StartRenderCycle()
         {
-            context.SetRotation(Rotation.None); // TODO: can be used later for different devices
+            _context.SetRotation(Rotation.None); // TODO: can be used later for different devices
 
-            displayLayer = 0;
+            _displayLayer = 0;
             State.Gl.Clear((uint)ClearBufferMask.ColorBufferBit | (uint)ClearBufferMask.DepthBufferBit);
         }
 
         public void EndRenderCycle()
         {
-            foreach (var renderLayer in renderLayers)
+            foreach (var renderLayer in _renderLayers)
                 renderLayer.Value.Render();
         }
 
         public void RemoveRenderObject(int renderObjectIndex)
         {
-            if (renderNodes.ContainsKey(renderObjectIndex))
+            if (_renderNodes.ContainsKey(renderObjectIndex))
             {
-                renderNodes[renderObjectIndex].Delete();
-                renderNodeIndexPool.UnassignIndex(renderObjectIndex);
+                _renderNodes[renderObjectIndex].Delete();
+                _renderNodeIndexPool.UnassignIndex(renderObjectIndex);
             }
         }
 
@@ -61,42 +61,42 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 return FillRectangle(x, y, width, height, color);
             }
 
-            int renderObjectIndex = renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var topLine = new Sprite(width, lineSize, renderDimensionReference);
-            var leftLine = new Sprite(lineSize, height - 2 * lineSize, renderDimensionReference);
-            var rightLine = new Sprite(lineSize, height - 2 * lineSize, renderDimensionReference);
-            var bottomLine = new Sprite(width, height - 2 * lineSize, renderDimensionReference);
-            var layer = renderLayers[Layer.Controls];
+            int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
+            var topLine = new Sprite(width, lineSize, _renderDimensionReference);
+            var leftLine = new Sprite(lineSize, height - 2 * lineSize, _renderDimensionReference);
+            var rightLine = new Sprite(lineSize, height - 2 * lineSize, _renderDimensionReference);
+            var bottomLine = new Sprite(width, height - 2 * lineSize, _renderDimensionReference);
+            var layer = _renderLayers[Layer.Controls];
 
             topLine.X = x;
             topLine.Y = y;
             topLine.Color = color;
-            topLine.DisplayLayer = displayLayer;
+            topLine.DisplayLayer = _displayLayer;
             topLine.Layer = layer;
             topLine.Visible = true;
 
             leftLine.X = x;
             leftLine.Y = y + lineSize;
             leftLine.Color = color;
-            leftLine.DisplayLayer = displayLayer;
+            leftLine.DisplayLayer = _displayLayer;
             leftLine.Layer = layer;
             leftLine.Visible = true;
 
             rightLine.X = x + width - lineSize;
             rightLine.Y = y + lineSize;
             rightLine.Color = color;
-            rightLine.DisplayLayer = displayLayer;
+            rightLine.DisplayLayer = _displayLayer;
             rightLine.Layer = layer;
             rightLine.Visible = true;
 
             bottomLine.X = x;
             bottomLine.Y = y + height - lineSize;
             bottomLine.Color = color;
-            bottomLine.DisplayLayer = displayLayer;
+            bottomLine.DisplayLayer = _displayLayer;
             bottomLine.Layer = layer;
             bottomLine.Visible = true;
 
-            ++displayLayer;
+            ++_displayLayer;
 
             var container = new RenderNodeContainer();
 
@@ -105,7 +105,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             container.AddChild(rightLine);
             container.AddChild(bottomLine);
 
-            renderNodes.Add(renderObjectIndex, container);
+            _renderNodes.Add(renderObjectIndex, container);
 
             return renderObjectIndex;
         }
@@ -115,17 +115,17 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (width == 0 || height == 0)
                 return -1;
 
-            int renderObjectIndex = renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var sprite = new Sprite(width, height, renderDimensionReference);
+            int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
+            var sprite = new Sprite(width, height, _renderDimensionReference);
 
             sprite.X = x;
             sprite.Y = y;
             sprite.Color = color;
-            sprite.DisplayLayer = displayLayer++; // last draw call -> last rendering (= highest display layer)
-            sprite.Layer = renderLayers[Layer.Controls];
+            sprite.DisplayLayer = _displayLayer++; // last draw call -> last rendering (= highest display layer)
+            sprite.Layer = _renderLayers[Layer.Controls];
             sprite.Visible = true;
 
-            renderNodes.Add(renderObjectIndex, sprite);
+            _renderNodes.Add(renderObjectIndex, sprite);
 
             return renderObjectIndex;
         }
@@ -140,18 +140,18 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (image.Width == 0 || image.Height == 0)
                 return -1;
 
-            int renderObjectIndex = renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var sprite = new Sprite(image.Width, image.Height, renderDimensionReference);
+            int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
+            var sprite = new Sprite(image.Width, image.Height, _renderDimensionReference);
 
             sprite.X = x;
             sprite.Y = y;
             sprite.Color = colorOverlay ?? Color.White;
-            sprite.TextureAtlasOffset = textureAtlas.AddTexture(image);
-            sprite.DisplayLayer = displayLayer++; // last draw call -> last rendering (= highest display layer)
-            sprite.Layer = renderLayers[Layer.Controls];
+            sprite.TextureAtlasOffset = _textureAtlas.AddTexture(image);
+            sprite.DisplayLayer = _displayLayer++; // last draw call -> last rendering (= highest display layer)
+            sprite.Layer = _renderLayers[Layer.Controls];
             sprite.Visible = true;
 
-            renderNodes.Add(renderObjectIndex, sprite);
+            _renderNodes.Add(renderObjectIndex, sprite);
 
             return renderObjectIndex;
         }

@@ -10,19 +10,19 @@ namespace Silk.NET.UI.Properties
 
     internal class DisableChangeEventContext : IDisposable
     {
-        private IControlProperty[] properties;
+        private IControlProperty[] _properties;
 
         internal DisableChangeEventContext(params IControlProperty[] properties)
         {
-            this.properties = properties;
+            _properties = properties;
 
-            foreach (var property in properties)
+            foreach (var property in _properties)
                 property.ChangeEventsEnabled = false;
         }
 
         public void Dispose()
         {
-            foreach (var property in properties)
+            foreach (var property in _properties)
                 property.ChangeEventsEnabled = true;
         }
     }

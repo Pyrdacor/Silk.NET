@@ -2,16 +2,16 @@ namespace Silk.NET.UI.Properties
 {
     public class BoolProperty : ControlProperty<bool?>
     {
-        private bool? value = null;
+        private bool? _value = null;
 
         public override bool? Value 
         { 
-            get => value;
+            get => _value;
             set
             {
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
+                    _value = value;
                     OnValueChanged();
                 }
             }
@@ -20,7 +20,7 @@ namespace Silk.NET.UI.Properties
         internal BoolProperty(string name, bool? initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
     }
 }

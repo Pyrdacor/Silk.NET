@@ -34,7 +34,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public static Texture ActiveTexture { get; private set; } = null;
 
-        private bool disposed = false;
+        private bool _disposed = false;
 
         public virtual uint Index { get; private set; } = 0u;
         public virtual int Width { get; } = 0;
@@ -82,7 +82,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             Create(format, pixelData, numMipMapLevels);
         }
 
-        static GLEnum ToOpenGLPixelFormat(PixelFormat format)
+        private static GLEnum ToOpenGLPixelFormat(PixelFormat format)
         {
             switch (format)
             {
@@ -135,7 +135,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public virtual void Bind()
         {
-            if (disposed)
+            if (_disposed)
                 throw new InvalidOperationException("Tried to bind a disposed texture.");
 
             if (ActiveTexture == this)
@@ -153,7 +153,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -167,7 +167,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     }
                 }
 
-                disposed = true;
+                _disposed = true;
             }
         }
 

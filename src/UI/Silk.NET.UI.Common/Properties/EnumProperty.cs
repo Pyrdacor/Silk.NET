@@ -4,17 +4,17 @@ namespace Silk.NET.UI.Properties
 {
     public class EnumProperty : ControlProperty<int?>
     {
-        private Type enumType;
-        private int? value = null;
+        private Type _enumType; // TODO: needed?
+        private int? _value = null;
 
         public override int? Value 
         { 
-            get => value;
+            get => _value;
             set
             {
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
+                    _value = value;
                     OnValueChanged();
                 }
             }
@@ -23,8 +23,8 @@ namespace Silk.NET.UI.Properties
         internal EnumProperty(string name, Type enumType, int? initialValue = null)
             : base(name)
         {
-            this.enumType = enumType;
-            value = initialValue;
+            _enumType = enumType;
+            _value = initialValue;
         }
     }
 }

@@ -2,16 +2,16 @@ namespace Silk.NET.UI.Properties
 {
     public class IntProperty : ControlProperty<int?>
     {
-        private int? value = null;
+        private int? _value = null;
 
         public override int? Value 
         { 
-            get => value;
+            get => _value;
             set
             {
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
+                    _value = value;
                     OnValueChanged();
                 }
             }
@@ -20,7 +20,7 @@ namespace Silk.NET.UI.Properties
         internal IntProperty(string name, int? initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
     }
 }

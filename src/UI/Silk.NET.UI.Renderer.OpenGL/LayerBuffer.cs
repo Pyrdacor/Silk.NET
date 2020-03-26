@@ -7,16 +7,16 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
     internal class LayerBuffer : BufferObject<LayerValueType>
     {
-        uint index = 0;
-        bool disposed = false;
-        LayerValueType[] buffer = null;
-        readonly object bufferLock = new object();
-        int size; // count of values
-        readonly IndexPool indices = new IndexPool();
-        bool changedSinceLastCreation = true;
-        readonly GLEnum usageHint = GLEnum.DynamicDraw;
+        private uint _index = 0;
+        private bool _disposed = false;
+        private LayerValueType[] _buffer = null;
+        private readonly object _bufferLock = new object();
+        private int _size; // count of values
+        private readonly IndexPool _indices = new IndexPool();
+        private bool _changedSinceLastCreation = true;
+        private readonly GLEnum _usageHint = GLEnum.DynamicDraw;
 
-        public override int Size => size;
+        public override int Size => _size;
 
         public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedInt;
 
@@ -24,10 +24,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public LayerBuffer(bool staticData)
         {
-            index = State.Gl.GenBuffer();
+            _index = State.Gl.GenBuffer();
 
             if (staticData)
-                usageHint = GLEnum.StaticDraw;
+                _usageHint = GLEnum.StaticDraw;
         }
 
         public int Add(LayerValueType layer, int index = -1)
@@ -35,39 +35,39 @@ namespace Silk.NET.UI.Renderer.OpenGL
             bool reused;
 
             if (index == -1)
-                index = indices.AssignNextFreeIndex(out reused);
+                index = _indices.AssignNextFreeIndex(out reused);
             else
-                reused = indices.AssignIndex(index);
+                reused = _indices.AssignIndex(index);
 
-            if (buffer == null)
+            if (_buffer == null)
             {
-                buffer = new LayerValueType[128];
-                buffer[0] = layer;
-                size = 1;
-                changedSinceLastCreation = true;
+                _buffer = new LayerValueType[128];
+                _buffer[0] = layer;
+                _size = 1;
+                _changedSinceLastCreation = true;
             }
             else
             {
-                if (index == buffer.Length) // we need to recreate the buffer
+                if (index == _buffer.Length) // we need to recreate the buffer
                 {
-                    if (buffer.Length < 512)
-                        Array.Resize(ref buffer, buffer.Length + 128);
-                    else if (buffer.Length < 2048)
-                        Array.Resize(ref buffer, buffer.Length + 256);
+                    if (_buffer.Length < 512)
+                        Array.Resize(ref _buffer, _buffer.Length + 128);
+                    else if (_buffer.Length < 2048)
+                        Array.Resize(ref _buffer, _buffer.Length + 256);
                     else
-                        Array.Resize(ref buffer, buffer.Length + 512);
+                        Array.Resize(ref _buffer, _buffer.Length + 512);
 
-                    changedSinceLastCreation = true;
+                    _changedSinceLastCreation = true;
                 }
 
                 if (!reused)
-                    ++size;
+                    ++_size;
 
-                if (buffer[index] != layer)
+                if (_buffer[index] != layer)
                 {
-                    buffer[index] = layer;
+                    _buffer[index] = layer;
 
-                    changedSinceLastCreation = true;
+                    _changedSinceLastCreation = true;
                 }
             }
 
@@ -76,22 +76,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void Update(int index, LayerValueType layer)
         {
-            if (buffer[index] != layer)
+            if (_buffer[index] != layer)
             {
-                buffer[index] = layer;
+                _buffer[index] = layer;
 
-                changedSinceLastCreation = true;
+                _changedSinceLastCreation = true;
             }
         }
 
         public void Remove(int index)
         {
-            indices.UnassignIndex(index);
+            _indices.UnassignIndex(index);
         }
 
         public void ReduceSizeTo(int size)
         {
-            this.size = size;
+            _size = size;
         }
 
         public override void Dispose()
@@ -101,86 +101,86 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
                     State.Gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
-                    if (index != 0)
+                    if (_index != 0)
                     {
-                        State.Gl.DeleteBuffer(index);
+                        State.Gl.DeleteBuffer(_index);
 
-                        if (buffer != null)
+                        if (_buffer != null)
                         {
-                            lock (bufferLock)
+                            lock (_bufferLock)
                             {
-                                buffer = null;
+                                _buffer = null;
                             }
                         }
 
-                        size = 0;
-                        index = 0;
+                        _size = 0;
+                        _index = 0;
                     }
 
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }
 
         public override void Bind()
         {
-            if (disposed)
+            if (_disposed)
                 throw new InvalidOperationException("Tried to bind a disposed buffer.");
 
-            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, _index);
 
             Recreate(); // ensure that the data is up to date
         }
 
         void Recreate() // is only called when the buffer is bound (see Bind())
         {
-            if (!changedSinceLastCreation || buffer == null)
+            if (!_changedSinceLastCreation || _buffer == null)
                 return;
 
-            lock (bufferLock)
+            lock (_bufferLock)
             {
                 unsafe
                 {
-                    fixed (LayerValueType* ptr = &buffer[0])
+                    fixed (LayerValueType* ptr = &_buffer[0])
                     {
                         State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(LayerValueType)),
-                            ptr, usageHint);
+                            ptr, _usageHint);
                     }
                 }
             }
 
-            changedSinceLastCreation = false;
+            _changedSinceLastCreation = false;
         }
 
         internal override bool RecreateUnbound()
         {
-            if (!changedSinceLastCreation || buffer == null)
+            if (!_changedSinceLastCreation || _buffer == null)
                 return false;
 
-            if (disposed)
+            if (_disposed)
                 throw new InvalidOperationException("Tried to recreate a disposed buffer.");
 
-            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, _index);
 
-            lock (bufferLock)
+            lock (_bufferLock)
             {
                 unsafe
                 {
-                    fixed (LayerValueType* ptr = &buffer[0])
+                    fixed (LayerValueType* ptr = &_buffer[0])
                     {
                         State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(LayerValueType)),
-                            ptr, usageHint);
+                            ptr, _usageHint);
                     }
                 }
             }
 
-            changedSinceLastCreation = false;
+            _changedSinceLastCreation = false;
 
             return true;
         }

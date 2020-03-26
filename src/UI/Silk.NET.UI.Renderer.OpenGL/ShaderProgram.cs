@@ -8,10 +8,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
     // TODO: for OGL version < 4.1 we should use Gl.UniformX instead of Gl.ProgramUniformX
     internal class ShaderProgram : IDisposable
     {
-        Shader fragmentShader = null;
-        Shader vertexShader = null;
-        bool disposed = false;
-        string fragmentColorOutputName = "color";
+        private Shader _fragmentShader = null;
+        private Shader _vertexShader = null;
+        private bool _disposed = false;
+        private string _fragmentColorOutputName = "color";
 
         public uint ProgramIndex { get; private set; } = 0;
         public bool Loaded { get; private set; } = false;
@@ -42,7 +42,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         {
         	if (!string.IsNullOrWhiteSpace(name))
             {
-            	fragmentColorOutputName = name;
+            	_fragmentColorOutputName = name;
                 return true;
             }
 
@@ -56,29 +56,29 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             if (shader.ShaderType == Shader.Type.Fragment)
             {
-            	if (fragmentShader == shader)
+            	if (_fragmentShader == shader)
                 	return;
 
-            	if (fragmentShader != null)
-                    State.Gl.DetachShader(ProgramIndex, fragmentShader.ShaderIndex);
+            	if (_fragmentShader != null)
+                    State.Gl.DetachShader(ProgramIndex, _fragmentShader.ShaderIndex);
 
-                fragmentShader = shader;
+                _fragmentShader = shader;
                 State.Gl.AttachShader(ProgramIndex, shader.ShaderIndex);
             }
             else if (shader.ShaderType == Shader.Type.Vertex)
             {
-            	if (vertexShader == shader)
+            	if (_vertexShader == shader)
                 	return;
 
-            	if (vertexShader != null)
-                    State.Gl.DetachShader(ProgramIndex, vertexShader.ShaderIndex);
+            	if (_vertexShader != null)
+                    State.Gl.DetachShader(ProgramIndex, _vertexShader.ShaderIndex);
 
-                vertexShader = shader;
+                _vertexShader = shader;
                 State.Gl.AttachShader(ProgramIndex, shader.ShaderIndex);
             }
 
             Linked = false;
-            Loaded = fragmentShader != null && vertexShader != null;
+            Loaded = _fragmentShader != null && _vertexShader != null;
         }
 
         public void Link(bool detachShaders)
@@ -103,16 +103,16 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             if (detachShaders)
             {
-            	if (fragmentShader != null)
+            	if (_fragmentShader != null)
                 {
-                    State.Gl.DetachShader(ProgramIndex, fragmentShader.ShaderIndex);
-                    fragmentShader = null;
+                    State.Gl.DetachShader(ProgramIndex, _fragmentShader.ShaderIndex);
+                    _fragmentShader = null;
                 }
 
-                if (vertexShader != null)
+                if (_vertexShader != null)
                 {
-                    State.Gl.DetachShader(ProgramIndex, vertexShader.ShaderIndex);
-                    vertexShader = null;
+                    State.Gl.DetachShader(ProgramIndex, _vertexShader.ShaderIndex);
+                    _vertexShader = null;
                 }
 
                 Loaded = false;
@@ -298,7 +298,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         private void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -314,7 +314,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                         ProgramIndex = 0;
                     }
 
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }

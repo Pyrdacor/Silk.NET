@@ -6,16 +6,16 @@ namespace Silk.NET.UI.Renderer.OpenGL
 {
     internal class ColorBuffer : BufferObject<byte>
     {
-        uint index = 0;
-        bool disposed = false;
-        byte[] buffer = null;
-        readonly object bufferLock = new object();
-        int size; // count of values
-        readonly IndexPool indices = new IndexPool();
-        bool changedSinceLastCreation = true;
-        readonly GLEnum usageHint = GLEnum.DynamicDraw;
+        private uint _index = 0;
+        private bool _disposed = false;
+        private byte[] _buffer = null;
+        private readonly object _bufferLock = new object();
+        private int _size; // count of values
+        private readonly IndexPool _indices = new IndexPool();
+        private bool _changedSinceLastCreation = true;
+        private readonly GLEnum _usageHint = GLEnum.DynamicDraw;
 
-        public override int Size => size;
+        public override int Size => _size;
 
         public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedByte;
 
@@ -23,10 +23,10 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public ColorBuffer(bool staticData)
         {
-            index = State.Gl.GenBuffer();
+            _index = State.Gl.GenBuffer();
 
             if (staticData)
-                usageHint = GLEnum.StaticDraw;
+                _usageHint = GLEnum.StaticDraw;
         }
 
         public int Add(Color color, int index = -1)
@@ -34,44 +34,44 @@ namespace Silk.NET.UI.Renderer.OpenGL
             bool reused;
 
             if (index == -1)
-                index = indices.AssignNextFreeIndex(out reused);
+                index = _indices.AssignNextFreeIndex(out reused);
             else
-                reused = indices.AssignIndex(index);
+                reused = _indices.AssignIndex(index);
 
-            if (buffer == null)
+            if (_buffer == null)
             {
-                buffer = new byte[128];
-                buffer[0] = color.R;
-                buffer[1] = color.G;
-                buffer[2] = color.B;
-                buffer[3] = color.A;
-                size = 4;
-                changedSinceLastCreation = true;
+                _buffer = new byte[128];
+                _buffer[0] = color.R;
+                _buffer[1] = color.G;
+                _buffer[2] = color.B;
+                _buffer[3] = color.A;
+                _size = 4;
+                _changedSinceLastCreation = true;
             }
             else
             {
-                buffer = EnsureBufferSize(buffer, index * 4, out bool changed);
+                _buffer = EnsureBufferSize(_buffer, index * 4, out bool changed);
 
                 if (!reused)
-                    size += 4;
+                    _size += 4;
 
                 int bufferIndex = index * 4;
 
-                if (buffer[bufferIndex + 0] != color.R ||
-                    buffer[bufferIndex + 1] != color.G ||
-                    buffer[bufferIndex + 2] != color.B ||
-                    buffer[bufferIndex + 3] != color.A)
+                if (_buffer[bufferIndex + 0] != color.R ||
+                    _buffer[bufferIndex + 1] != color.G ||
+                    _buffer[bufferIndex + 2] != color.B ||
+                    _buffer[bufferIndex + 3] != color.A)
                 {
-                    buffer[bufferIndex + 0] = color.R;
-                    buffer[bufferIndex + 1] = color.G;
-                    buffer[bufferIndex + 2] = color.B;
-                    buffer[bufferIndex + 3] = color.A;
+                    _buffer[bufferIndex + 0] = color.R;
+                    _buffer[bufferIndex + 1] = color.G;
+                    _buffer[bufferIndex + 2] = color.B;
+                    _buffer[bufferIndex + 3] = color.A;
 
-                    changedSinceLastCreation = true;
+                    _changedSinceLastCreation = true;
                 }
                 else if (changed)
                 {
-                    changedSinceLastCreation = true;
+                    _changedSinceLastCreation = true;
                 }
             }
 
@@ -82,28 +82,28 @@ namespace Silk.NET.UI.Renderer.OpenGL
         {
             int bufferIndex = index * 4;
 
-            if (buffer[bufferIndex + 0] != color.R ||
-                buffer[bufferIndex + 1] != color.G ||
-                buffer[bufferIndex + 2] != color.B ||
-                buffer[bufferIndex + 3] != color.A)
+            if (_buffer[bufferIndex + 0] != color.R ||
+                _buffer[bufferIndex + 1] != color.G ||
+                _buffer[bufferIndex + 2] != color.B ||
+                _buffer[bufferIndex + 3] != color.A)
             {
-                buffer[bufferIndex + 0] = color.R;
-                buffer[bufferIndex + 1] = color.G;
-                buffer[bufferIndex + 2] = color.B;
-                buffer[bufferIndex + 3] = color.A;
+                _buffer[bufferIndex + 0] = color.R;
+                _buffer[bufferIndex + 1] = color.G;
+                _buffer[bufferIndex + 2] = color.B;
+                _buffer[bufferIndex + 3] = color.A;
 
-                changedSinceLastCreation = true;
+                _changedSinceLastCreation = true;
             }
         }
 
         public void Remove(int index)
         {
-            indices.UnassignIndex(index);
+            _indices.UnassignIndex(index);
         }
 
         public void ReduceSizeTo(int size)
         {
-            this.size = size;
+            _size = size;
         }
 
         public override void Dispose()
@@ -113,86 +113,86 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
                     State.Gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
-                    if (index != 0)
+                    if (_index != 0)
                     {
-                        State.Gl.DeleteBuffer(index);
+                        State.Gl.DeleteBuffer(_index);
 
-                        if (buffer != null)
+                        if (_buffer != null)
                         {
-                            lock (bufferLock)
+                            lock (_bufferLock)
                             {
-                                buffer = null;
+                                _buffer = null;
                             }
                         }
 
-                        size = 0;
-                        index = 0;
+                        _size = 0;
+                        _index = 0;
                     }
 
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }
 
         public override void Bind()
         {
-            if (disposed)
+            if (_disposed)
                 throw new InvalidOperationException("Tried to bind a disposed buffer.");
 
-            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, _index);
 
             Recreate(); // ensure that the data is up to date
         }
 
         void Recreate() // is only called when the buffer is bound (see Bind())
         {
-            if (!changedSinceLastCreation || buffer == null)
+            if (!_changedSinceLastCreation || _buffer == null)
                 return;
 
-            lock (bufferLock)
+            lock (_bufferLock)
             {
                 unsafe
                 {
-                    fixed (byte* ptr = &buffer[0])
+                    fixed (byte* ptr = &_buffer[0])
                     {
                         State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(byte)),
-                            ptr, usageHint);
+                            ptr, _usageHint);
                     }
                 }
             }
 
-            changedSinceLastCreation = false;
+            _changedSinceLastCreation = false;
         }
 
         internal override bool RecreateUnbound()
         {
-            if (!changedSinceLastCreation || buffer == null)
+            if (!_changedSinceLastCreation || _buffer == null)
                 return false;
 
-            if (disposed)
+            if (_disposed)
                 throw new InvalidOperationException("Tried to recreate a disposed buffer.");
 
-            State.Gl.BindBuffer(GLEnum.ArrayBuffer, index);
+            State.Gl.BindBuffer(GLEnum.ArrayBuffer, _index);
 
-            lock (bufferLock)
+            lock (_bufferLock)
             {
                 unsafe
                 {
-                    fixed (byte* ptr = &buffer[0])
+                    fixed (byte* ptr = &_buffer[0])
                     {
                         State.Gl.BufferData(GLEnum.ArrayBuffer, (uint)(Size * sizeof(byte)),
-                            ptr, usageHint);
+                            ptr, _usageHint);
                     }
                 }
             }
 
-            changedSinceLastCreation = false;
+            _changedSinceLastCreation = false;
 
             return true;
         }

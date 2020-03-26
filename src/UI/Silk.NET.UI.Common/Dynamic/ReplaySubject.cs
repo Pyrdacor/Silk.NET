@@ -15,18 +15,18 @@ namespace Silk.NET.UI
 
         public ReplaySubject(T value)
         {
-            currentValue = value;
-            hasValue = true;
+            _currentValue = value;
+            _hasValue = true;
         }
 
         public override Subscription<T> Subscribe(Action<T> next, Action<Exception> error = null, Action complete = null)
         {
-            if (completed)
+            if (_completed)
                 return Subscription<T>.Empty;
 
             var subscription = base.Subscribe(next, error, complete);
 
-            CallNextActions(currentValue);
+            CallNextActions(_currentValue);
 
             return subscription;
         }

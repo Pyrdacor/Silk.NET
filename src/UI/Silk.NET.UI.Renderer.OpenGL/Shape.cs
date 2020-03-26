@@ -31,12 +31,13 @@ namespace Silk.NET.UI.Renderer.OpenGL
         public const int EllipseVertices = 65; // 1 center, 64 outline (drawn as triangle fan)
         public const int RoundRectVertices = 29; // 1 center, 7 for each corner (drawn as triangle fan)
 
-        protected int? drawIndex = null;
+        protected int? _drawIndex = null;        
+        private byte _displayLayer = 0;
+        private Type _type = Type.Triangle;
+        private Point[] _points;
+
         public override int VerticesPerNode { get; } = 0;
-        byte displayLayer = 0;
-        Type type = Type.Triangle;
-        Point[] points;
-        public override PrimitiveType PrimitiveType => type switch
+        public override PrimitiveType PrimitiveType => _type switch
         {
             Type.Triangle => PrimitiveType.Triangles,
             Type.Ellipse => PrimitiveType.TriangleFan,
@@ -47,7 +48,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         private Shape(Type type, RenderDimensionReference renderDimensionReference, params Point[] points)
             : base(CalculateWidth(type, points), CalculateHeight(type, points), renderDimensionReference)
         {
-            this.points = points;
+            _points = points;
             VerticesPerNode = type switch
             {
                 Type.Triangle => TriangleVertices,
@@ -96,13 +97,13 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public byte DisplayLayer
         {
-            get => displayLayer;
+            get => _displayLayer;
             set
             {
-                if (displayLayer == value)
+                if (_displayLayer == value)
                     return;
 
-                displayLayer = value;
+                _displayLayer = value;
 
                 UpdateDisplayLayer();
             }
@@ -110,22 +111,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         protected override void AddToLayer()
         {
-            drawIndex = Layer.GetDrawIndex(this);
+            _drawIndex = Layer.GetDrawIndex(this);
         }
 
         protected override void RemoveFromLayer()
         {
-            if (drawIndex.HasValue)
+            if (_drawIndex.HasValue)
             {
-                Layer.FreeDrawIndex(drawIndex.Value);
-                drawIndex = null;
+                Layer.FreeDrawIndex(_drawIndex.Value);
+                _drawIndex = null;
             }
         }
 
         protected override void UpdatePosition()
         {
-            if (drawIndex.HasValue)
-                Layer.UpdatePosition(drawIndex.Value, this);
+            if (_drawIndex.HasValue)
+                Layer.UpdatePosition(_drawIndex.Value, this);
         }
 
         public override void Resize(int width, int height)
@@ -133,33 +134,33 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (Width == width && Height == height)
                 return;
 
-            switch (type)
+            switch (_type)
             {
                 case Type.Triangle:
                     {
                         for (int i = 0; i < 3; ++i)
                         {
-                            int newX = points[i].X;
-                            int newY = points[i].Y;
+                            int newX = _points[i].X;
+                            int newY = _points[i].Y;
 
-                            if (points[i].X != 0)
+                            if (_points[i].X != 0)
                             {
-                                float ratio = (float)points[i].X / Width;
+                                float ratio = (float)_points[i].X / Width;
                                 newX = Util.Round(ratio * width);
                             }
-                            if (points[i].Y != 0)
+                            if (_points[i].Y != 0)
                             {
-                                float ratio = (float)points[i].Y / Height;
+                                float ratio = (float)_points[i].Y / Height;
                                 newY = Util.Round(ratio * height);
                             }
 
-                            points[i] = new Point(newX, newY);
+                            _points[i] = new Point(newX, newY);
                         }
                     }
                     break;
                 case Type.Ellipse:
                 case Type.RoundRect:
-                    points[0] = new Point(width, height);
+                    _points[0] = new Point(width, height);
                     break;
             }            
 
@@ -170,8 +171,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         protected override void UpdateDisplayLayer()
         {
-            if (drawIndex.HasValue)
-                Layer.UpdateDisplayLayer(drawIndex.Value, displayLayer);
+            if (_drawIndex.HasValue)
+                Layer.UpdateDisplayLayer(_drawIndex.Value, _displayLayer);
         }
 
         private Point[] GetEllipsePoints()
@@ -188,9 +189,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public override Point[] ProvideVertexPositions()
         {
-            return type switch
+            return _type switch
             {
-                Type.Triangle => points,
+                Type.Triangle => _points,
                 Type.Ellipse => GetEllipsePoints(),
                 Type.RoundRect => GetRoundRectPoints(),
                 _ => null

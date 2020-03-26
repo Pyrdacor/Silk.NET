@@ -7,11 +7,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
     internal class TextureAtlas
     {
         public MutableTexture AtlasTexture { get; } = new MutableTexture(0, 0);
-        private readonly Dictionary<Image, Point> images = new Dictionary<Image, Point>();
+        private readonly Dictionary<Image, Point> _images = new Dictionary<Image, Point>();
 
         public Point AddTexture(Image image)
         {
-            if (!images.ContainsKey(image))
+            if (!_images.ContainsKey(image))
             {
                 // TODO: place the image so the atlas size uses minimal space
                 // AtlasTexture.AddSprite(x, y, imageData, image.Width, image.Height);
@@ -20,7 +20,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
             else
             {
-                return images[image];
+                return _images[image];
             }
         }
     }

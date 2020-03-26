@@ -5,47 +5,47 @@ namespace Silk.NET.UI.Renderer.OpenGL
 {
     internal class IndexPool
     {
-        readonly List<int> releasedIndices = new List<int>();
-        int firstFree = 0;
+        private readonly List<int> _releasedIndices = new List<int>();
+        private int _firstFree = 0;
 
         public int AssignNextFreeIndex(out bool reused)
         {
-            if (releasedIndices.Count > 0)
+            if (_releasedIndices.Count > 0)
             {
                 reused = true;
 
-                int index = releasedIndices[0];
+                int index = _releasedIndices[0];
 
-                releasedIndices.RemoveAt(0);
+                _releasedIndices.RemoveAt(0);
 
                 return index;
             }
 
             reused = false;
 
-            if (firstFree == int.MaxValue)
+            if (_firstFree == int.MaxValue)
             {
                 throw new Exceptions.InsufficientResourcesException("No free index available.");
             }
 
-            return firstFree++;
+            return _firstFree++;
         }
 
         public void UnassignIndex(int index)
         {
-            releasedIndices.Add(index);
+            _releasedIndices.Add(index);
         }
 
         public bool AssignIndex(int index)
         {
-            if (releasedIndices.Contains(index))
+            if (_releasedIndices.Contains(index))
             {
-                releasedIndices.Remove(index);
+                _releasedIndices.Remove(index);
                 return true;
             }
 
-            if (index == firstFree)
-                ++firstFree;
+            if (index == _firstFree)
+                ++_firstFree;
 
             return false;
         }

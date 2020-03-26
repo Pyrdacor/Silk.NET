@@ -8,27 +8,27 @@ namespace Silk.NET.UI
     /// </summary>
     public class ValueSubject<T> : Subject<T>
     {
-        private bool firstSubscription = true;
+        private bool _firstSubscription = true;
 
-        public T Value => Value;
+        public T Value => _currentValue;
 
         public ValueSubject(T value)
         {
-            currentValue = value;
-            hasValue = true;
+            _currentValue = value;
+            _hasValue = true;
         }
 
         public override Subscription<T> Subscribe(Action<T> next, Action<Exception> error = null, Action complete = null)
         {
-            if (completed)
+            if (_completed)
                 return Subscription<T>.Empty;
 
             var subscription = base.Subscribe(next, error, complete);
 
-            if (firstSubscription)
+            if (_firstSubscription)
             {
-                firstSubscription = false;
-                CallNextActions(currentValue);
+                _firstSubscription = false;
+                CallNextActions(_currentValue);
             }
 
             return subscription;

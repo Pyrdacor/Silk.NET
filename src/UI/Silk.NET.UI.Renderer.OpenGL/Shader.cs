@@ -11,8 +11,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
             Vertex
         }
 
-        string code = "";
-        bool disposed = false;
+        private string _code = "";
+        private bool _disposed = false;
 
         public Type ShaderType { get; } = Type.Fragment;
         public uint ShaderIndex { get; private set; } = 0;
@@ -20,7 +20,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         public Shader(Type type, string code)
         {
         	ShaderType = type;
-            this.code = code;
+            _code = code;
 
             Create();
         }
@@ -31,7 +31,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 GLEnum.FragmentShader :
                 GLEnum.VertexShader);
 
-            State.Gl.ShaderSource(ShaderIndex, 1, new string[] { code }, new Int32[] { code.Length });
+            State.Gl.ShaderSource(ShaderIndex, 1, new string[] { _code }, new Int32[] { _code.Length });
             State.Gl.CompileShader(ShaderIndex);
 
             // Check for errors
@@ -55,7 +55,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         private void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -65,7 +65,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                         ShaderIndex = 0;
                     }
 
-                    disposed = true;
+                    _disposed = true;
                 }
             }
         }

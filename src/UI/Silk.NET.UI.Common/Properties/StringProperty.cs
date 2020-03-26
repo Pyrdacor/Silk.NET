@@ -2,16 +2,16 @@ namespace Silk.NET.UI.Properties
 {
     public class StringProperty : ControlProperty<string>
     {
-        private string value = null;
+        private string _value = null;
 
         public override string Value 
         { 
-            get => value;
+            get => _value;
             set
             {
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
+                    _value = value;
                     OnValueChanged();
                 }
             }
@@ -20,7 +20,7 @@ namespace Silk.NET.UI.Properties
         internal StringProperty(string name, string initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
     }
 }

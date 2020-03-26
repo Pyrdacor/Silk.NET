@@ -4,16 +4,16 @@ namespace Silk.NET.UI.Properties
 {
     public class ColorProperty : ControlProperty<ColorValue?>
     {
-        private ColorValue? value = null;
+        private ColorValue? _value = null;
 
         public override ColorValue? Value 
         { 
-            get => value;
+            get => _value;
             set
             {
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
+                    _value = value;
                     OnValueChanged();
                 }
             }
@@ -22,25 +22,25 @@ namespace Silk.NET.UI.Properties
         internal ColorProperty(string name, string initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal ColorProperty(string name, int? initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal ColorProperty(string name, Color? initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
 
         internal ColorProperty(string name, ColorValue? initialValue = null)
             : base(name)
         {
-            value = initialValue;
+            _value = initialValue;
         }
     }
 }

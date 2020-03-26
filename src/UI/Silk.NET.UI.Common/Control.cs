@@ -8,7 +8,7 @@ namespace Silk.NET.UI
 
     public abstract class Control
     {
-        private Component parent;
+        private Component _parent;
         internal virtual ControlRenderer ControlRenderer
         {
             get => Parent != null ? Parent.ControlRenderer : null;
@@ -47,12 +47,12 @@ namespace Silk.NET.UI
 
         #region Control Properties
 
-        private Dictionary<string, IControlProperty> controlProperties = new Dictionary<string, IControlProperty>();        
+        private Dictionary<string, IControlProperty> _controlProperties = new Dictionary<string, IControlProperty>();        
 
         #region State
 
-        private BoolProperty visible = new BoolProperty(nameof(Visible), true);
-        private BoolProperty enabled = new BoolProperty(nameof(Enabled), true);
+        private BoolProperty _visible = new BoolProperty(nameof(Visible), true);
+        private BoolProperty _enabled = new BoolProperty(nameof(Enabled), true);
 
         public bool Visible
         {
@@ -61,44 +61,44 @@ namespace Silk.NET.UI
                 if (Parent == null && !(this is RootComponent))
                     return false;
 
-                return visible.Value ?? true;
+                return _visible.Value ?? true;
             }
-            set => visible.Value = value;
+            set => _visible.Value = value;
         }
         public bool Enabled
         {
-            get => enabled.Value ?? true;
-            set => enabled.Value = value;
+            get => _enabled.Value ?? true;
+            set => _enabled.Value = value;
         }
 
         #endregion
 
         #region Metrics
 
-        private IntProperty width = new IntProperty(nameof(Width), 0);
-        private IntProperty height = new IntProperty(nameof(Height), 0);
-        private IntProperty x = new IntProperty(nameof(X), 0);
-        private IntProperty y = new IntProperty(nameof(Y), 0);
+        private IntProperty _width = new IntProperty(nameof(Width), 0);
+        private IntProperty _height = new IntProperty(nameof(Height), 0);
+        private IntProperty _x = new IntProperty(nameof(X), 0);
+        private IntProperty _y = new IntProperty(nameof(Y), 0);
 
         public int X
         {
-            get => x.Value ?? 0;
-            set => x.Value = value;
+            get => _x.Value ?? 0;
+            set => _x.Value = value;
         }
         public int Y
         {
-            get => y.Value ?? 0;
-            set => y.Value = value;
+            get => _y.Value ?? 0;
+            set => _y.Value = value;
         }
         public int Width
         {
-            get => width.Value ?? 0;
-            set => width.Value = value;
+            get => _width.Value ?? 0;
+            set => _width.Value = value;
         }
         public int Height
         {
-            get => height.Value ?? 0;
-            set => height.Value = value;
+            get => _height.Value ?? 0;
+            set => _height.Value = value;
         }
         public Point Location
         {
@@ -107,7 +107,7 @@ namespace Silk.NET.UI
             {
                 int oldX = X;
                 int oldY = Y;
-                using (new DisableChangeEventContext(x, y))
+                using (new DisableChangeEventContext(_x, _y))
                 {
                     X = value.X;
                     Y = value.Y;
@@ -123,7 +123,7 @@ namespace Silk.NET.UI
             {
                 int oldWidth = Width;
                 int oldHeight = Height;
-                using (new DisableChangeEventContext(width, height))
+                using (new DisableChangeEventContext(_width, _height))
                 {
                     Width = value.Width;
                     Height = value.Height;
@@ -169,12 +169,12 @@ namespace Silk.NET.UI
         internal ControlList InternalChildren { get; }
         public Component Parent
         {
-            get => parent;
+            get => _parent;
             internal set
             {
-                if (parent != value)
+                if (_parent != value)
                 {
-                    parent = value;
+                    _parent = value;
                     OnParentChanged();
                 }
             }
@@ -191,15 +191,15 @@ namespace Silk.NET.UI
             InternalChildren = new ControlList(this);
 
             // Register control properties
-            RegisterControlProperty(x);
-            RegisterControlProperty(y);
-            RegisterControlProperty(width);
-            RegisterControlProperty(height);
+            RegisterControlProperty(_x);
+            RegisterControlProperty(_y);
+            RegisterControlProperty(_width);
+            RegisterControlProperty(_height);
 
-            x.ValueChanged += OnPositionChanged;
-            y.ValueChanged += OnPositionChanged;
-            width.ValueChanged += OnSizeChanged;
-            height.ValueChanged += OnSizeChanged;
+            _x.ValueChanged += OnPositionChanged;
+            _y.ValueChanged += OnPositionChanged;
+            _width.ValueChanged += OnSizeChanged;
+            _height.ValueChanged += OnSizeChanged;
         }
 
         internal virtual void DestroyControl()
@@ -209,17 +209,17 @@ namespace Silk.NET.UI
             if (Parent != null)
                 Parent.InternalChildren.Remove(this);
 
-            x.ValueChanged -= OnPositionChanged;
-            y.ValueChanged -= OnPositionChanged;
-            width.ValueChanged -= OnSizeChanged;
-            height.ValueChanged -= OnSizeChanged;
+            _x.ValueChanged -= OnPositionChanged;
+            _y.ValueChanged -= OnPositionChanged;
+            _width.ValueChanged -= OnSizeChanged;
+            _height.ValueChanged -= OnSizeChanged;
 
             // TODO: remove from renderer?
         }
 
         protected void RegisterControlProperty<T>(ControlProperty<T> property)
         {
-            controlProperties.Add(property.Name, property);
+            _controlProperties.Add(property.Name, property);
         }
 
         protected virtual void OnRender(RenderEventArgs args)

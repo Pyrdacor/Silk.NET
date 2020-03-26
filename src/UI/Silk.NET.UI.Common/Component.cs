@@ -28,8 +28,8 @@ namespace Silk.NET.UI
 
     public abstract class Component : ContainerControl
     {
-        private Template template;
-        private Styles styles;
+        private Template _template;
+        private Styles _styles;
 
         protected Component()
             : base(null)
@@ -39,9 +39,9 @@ namespace Silk.NET.UI
 
         internal override void InitView()
         {
-            template.CreateFor(this);
-            template.Bind();
-            styles.Apply(this);
+            _template.CreateFor(this);
+            _template.Bind();
+            _styles.Apply(this);
         }
 
         internal void DestroyView()
@@ -75,8 +75,8 @@ namespace Silk.NET.UI
                 throw new InvalidOperationException($"Type {type.Name} is not derived from class `Component`.");
 
             component.Id = id;
-            component.template = TryTypeCreation<Template>(templateType);
-            component.styles = TryTypeCreation<Styles>(stylesType);
+            component._template = TryTypeCreation<Template>(templateType);
+            component._styles = TryTypeCreation<Styles>(stylesType);
 
             return component;
         }

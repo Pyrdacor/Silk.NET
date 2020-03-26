@@ -6,28 +6,28 @@ namespace Silk.NET.UI
     internal class TypeSelector : Selector
     {
         internal override int Priority => 100;
-        private List<Type> types;
+        private List<Type> _types;
 
         public TypeSelector(params Type[] types)
         {
-            this.types = new List<Type>(types);
+            _types = new List<Type>(types);
         }
 
         protected override bool Match(Control control, SelectorPathNode path)
         {
-            return types.Contains(control.GetType());
+            return _types.Contains(control.GetType());
         }
 
         public override bool Equals(Selector other)
         {
             var otherIdSelector = other as TypeSelector;
 
-            if (otherIdSelector == null || types.Count != otherIdSelector.types.Count)
+            if (otherIdSelector == null || _types.Count != otherIdSelector._types.Count)
                 return false;
 
-            for (int i = 0; i < types.Count; ++i)
+            for (int i = 0; i < _types.Count; ++i)
             {
-                if (types[i] != otherIdSelector.types[i])
+                if (_types[i] != otherIdSelector._types[i])
                     return false;
             }
 
@@ -40,7 +40,7 @@ namespace Silk.NET.UI
 
             hash = hash * 23 + Priority.GetHashCode();
 
-            foreach (var type in types)
+            foreach (var type in _types)
                 hash = hash * 23 + type.GetHashCode();
 
             return hash;

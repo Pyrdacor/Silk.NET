@@ -10,7 +10,7 @@ namespace Silk.NET.UI
     public class ControlStyle
     {
         private static readonly Dictionary<string, IControlProperty> DefaultStyleProperties = new Dictionary<string, IControlProperty>();
-        private readonly Dictionary<string, IControlProperty> styleProperties = new Dictionary<string, IControlProperty>();
+        private readonly Dictionary<string, IControlProperty> _styleProperties = new Dictionary<string, IControlProperty>();
 
         static ControlStyle()
         {
@@ -119,12 +119,12 @@ namespace Silk.NET.UI
         {
             get
             {
-                if (!styleProperties.ContainsKey(name))
+                if (!_styleProperties.ContainsKey(name))
                 {
                     return null;
                 }
 
-                return styleProperties[name];
+                return _styleProperties[name];
             }
         }
 
@@ -135,12 +135,12 @@ namespace Silk.NET.UI
 
         internal void SetProperty(string name, object value)
         {
-            if (!styleProperties.ContainsKey(name)) // only set once
+            if (!_styleProperties.ContainsKey(name)) // only set once
             {
                 var property = CreateProperty(name, value.GetType(), value);
 
                 if (property != null)
-                    styleProperties.Add(name, property);
+                    _styleProperties.Add(name, property);
             }
         }
     }

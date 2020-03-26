@@ -6,15 +6,15 @@ namespace Silk.NET.UI
 {
     public abstract class Styles
     {
-        private readonly Dictionary<Selector, Style> styles = new Dictionary<Selector, Style>();
+        private readonly Dictionary<Selector, Style> _styles = new Dictionary<Selector, Style>();
 
         protected void Add(Selector selector, Style style)
         {
             // styles that are set later with the same selector will override previous styles
-            if (styles.ContainsKey(selector))
-                styles[selector] = MergeStyles(styles[selector], style);
+            if (_styles.ContainsKey(selector))
+                _styles[selector] = MergeStyles(_styles[selector], style);
             else
-                styles[selector] = style;
+                _styles[selector] = style;
         }
 
         private Style MergeStyles(Style oldStyle, Style newStyle)
@@ -72,7 +72,7 @@ namespace Silk.NET.UI
 
         internal void Apply(Component component)
         {
-            var styleList = styles.ToList();
+            var styleList = _styles.ToList();
             styleList.Sort(new StyleComparer()); // sort by selector priority
 
             foreach (var style in styleList)

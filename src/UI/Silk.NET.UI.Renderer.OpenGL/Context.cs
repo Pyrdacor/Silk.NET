@@ -7,13 +7,13 @@ namespace Silk.NET.UI.Renderer.OpenGL
 {
     internal class Context
     {
-        int width = -1;
-        int height = -1;
-        Rotation rotation = Rotation.None;
-        Matrix4x4 modelViewMatrix = Matrix4x4.Identity;
-        Matrix4x4 unzoomedModelViewMatrix = Matrix4x4.Identity;
-        float zoom = 0.0f;
-        Color backgroundColor = Color.Gray;
+        private int _width = -1;
+        private int _height = -1;
+        private Rotation _rotation = Rotation.None;
+        private Matrix4x4 _modelViewMatrix = Matrix4x4.Identity;
+        private Matrix4x4 _unzoomedModelViewMatrix = Matrix4x4.Identity;
+        private float _zoom = 0.0f;
+        private Color _backgroundColor = Color.Gray;
 
         public Context(RenderDimensionReference dimensions)
         {
@@ -22,7 +22,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (State.OpenGLVersionMajor < 3 || (State.OpenGLVersionMajor == 3 && State.OpenGLVersionMinor < 1))
                 throw new NotSupportedException($"OpenGL version 3.1 is required for rendering. Your version is {State.OpenGLVersionMajor}.{State.OpenGLVersionMinor}.");
 
-            State.Gl.ClearColor(backgroundColor);
+            State.Gl.ClearColor(_backgroundColor);
 
             State.Gl.Enable(EnableCap.DepthTest);
             State.Gl.DepthFunc(DepthFunction.Lequal);
@@ -43,21 +43,21 @@ namespace Silk.NET.UI.Renderer.OpenGL
             State.PushUnzoomedModelViewMatrix(Matrix4x4.Identity);
             State.PushProjectionMatrix(Matrix4x4.CreateOrthographic(width, height, 0.0f, 1.0f));
 
-            this.width = width;
-            this.height = height;
+            _width = width;
+            _height = height;
 
-            SetRotation(rotation, true);
+            SetRotation(_rotation, true);
         }
 
         public float Zoom
         {
-            get => zoom;
+            get => _zoom;
             set
             {
-                if (Util.FloatEqual(value, zoom) || value < 0.0f)
+                if (Util.FloatEqual(value, _zoom) || value < 0.0f)
                     return;
 
-                zoom = value;
+                _zoom = value;
 
                 ApplyMatrix();
             }
@@ -65,22 +65,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public Color BackgroundColor
         {
-            get => backgroundColor;
+            get => _backgroundColor;
             set
             {
-                if (backgroundColor == value)
+                if (_backgroundColor == value)
                     return;
 
-                backgroundColor = value;
-                State.Gl.ClearColor(backgroundColor);
+                _backgroundColor = value;
+                State.Gl.ClearColor(_backgroundColor);
             }
         }
 
         public void SetRotation(Rotation rotation, bool forceUpdate = false)
         {
-            if (forceUpdate || rotation != this.rotation)
+            if (forceUpdate || rotation != _rotation)
             {
-                this.rotation = rotation;
+                _rotation = rotation;
 
                 ApplyMatrix();
             }
@@ -88,20 +88,20 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         void ApplyMatrix()
         {
-            State.RestoreModelViewMatrix(modelViewMatrix);
+            State.RestoreModelViewMatrix(_modelViewMatrix);
             State.PopModelViewMatrix();
-            State.RestoreUnzoomedModelViewMatrix(unzoomedModelViewMatrix);
+            State.RestoreUnzoomedModelViewMatrix(_unzoomedModelViewMatrix);
             State.PopUnzoomedModelViewMatrix();
 
-            if (rotation == Rotation.None)
+            if (_rotation == Rotation.None)
             {
-                modelViewMatrix = Matrix4x4.Identity;
+                _modelViewMatrix = Matrix4x4.Identity;
             }
             else
             {
                 var rotationDegree = 0.0f;
 
-                switch (rotation)
+                switch (_rotation)
                 {
                     case Rotation.Deg90:
                         rotationDegree = 90.0f;
@@ -116,14 +116,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
                         break;
                 }
 
-                var x = 0.5f * width;
-                var y = 0.5f * height;
+                var x = 0.5f * _width;
+                var y = 0.5f * _height;
                 const float deg2rad = (float)(Math.PI / 180.0);
 
-                if (rotation != Rotation.Deg180) // 90° or 270°
+                if (_rotation != Rotation.Deg180) // 90° or 270°
                 {
-                    float factor = (float)height / (float)width;
-                    modelViewMatrix =
+                    float factor = (float)_height / (float)_width;
+                    _modelViewMatrix =
                         Matrix4x4.CreateTranslation(x, y, 0.0f) *
                         Matrix4x4.CreateRotationZ(rotationDegree * deg2rad) *
                         Matrix4x4.CreateScale(factor, 1.0f / factor, 1.0f) *
@@ -131,29 +131,29 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 }
                 else // 180°
                 {
-                    modelViewMatrix =
+                    _modelViewMatrix =
                         Matrix4x4.CreateTranslation(x, y, 0.0f) *
                         Matrix4x4.CreateRotationZ(rotationDegree * deg2rad) *
                         Matrix4x4.CreateTranslation(-x, -y, 0.0f);
                 }
             }
 
-            unzoomedModelViewMatrix = modelViewMatrix;
+            _unzoomedModelViewMatrix = _modelViewMatrix;
 
-            State.PushUnzoomedModelViewMatrix(unzoomedModelViewMatrix);
+            State.PushUnzoomedModelViewMatrix(_unzoomedModelViewMatrix);
 
-            if (!Util.FloatEqual(zoom, 0.0f))
+            if (!Util.FloatEqual(_zoom, 0.0f))
             {
-                var x = 0.5f * width;
-                var y = 0.5f * height;
+                var x = 0.5f * _width;
+                var y = 0.5f * _height;
 
-                modelViewMatrix = Matrix4x4.CreateTranslation(x, y, 0.0f) *
-                    Matrix4x4.CreateScale(1.0f + zoom * 0.5f, 1.0f + zoom * 0.5f, 1.0f) *
+                _modelViewMatrix = Matrix4x4.CreateTranslation(x, y, 0.0f) *
+                    Matrix4x4.CreateScale(1.0f + _zoom * 0.5f, 1.0f + _zoom * 0.5f, 1.0f) *
                     Matrix4x4.CreateTranslation(-x, -y, 0.0f) *
-                    modelViewMatrix;
+                    _modelViewMatrix;
             }
 
-            State.PushModelViewMatrix(modelViewMatrix);
+            State.PushModelViewMatrix(_modelViewMatrix);
         }
     }
 }
