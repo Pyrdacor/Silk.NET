@@ -65,7 +65,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             var topLine = new Sprite(width, lineSize, _renderDimensionReference);
             var leftLine = new Sprite(lineSize, height - 2 * lineSize, _renderDimensionReference);
             var rightLine = new Sprite(lineSize, height - 2 * lineSize, _renderDimensionReference);
-            var bottomLine = new Sprite(width, height - 2 * lineSize, _renderDimensionReference);
+            var bottomLine = new Sprite(width, lineSize, _renderDimensionReference);
             var layer = _renderLayers[Layer.Controls];
 
             topLine.X = x;

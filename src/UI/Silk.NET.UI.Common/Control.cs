@@ -12,7 +12,7 @@ namespace Silk.NET.UI
             get => Parent != null ? Parent.ControlRenderer : null;
         }
         private readonly ControlStyle style = new ControlStyle();
-        public ControlStyle Style => style;
+        internal protected ControlStyle Style => style;
 
 
         #region Lifecycle Hooks

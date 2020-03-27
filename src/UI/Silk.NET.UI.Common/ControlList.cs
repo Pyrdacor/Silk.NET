@@ -51,6 +51,10 @@ namespace Silk.NET.UI
             }
         }
 
+        public Control this[string id]
+        {
+            get => _controls.FirstOrDefault(c => c.Id == id);
+        }
         public int Count => _controls.Count;
         public bool IsReadOnly => false;
 

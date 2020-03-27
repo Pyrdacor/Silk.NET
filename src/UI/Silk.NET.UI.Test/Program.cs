@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System;
 using Silk.NET.Windowing.Common;
+using Silk.NET.UI.Controls;
 
 namespace Silk.NET.UI.Test
 {
@@ -12,16 +13,8 @@ namespace Silk.NET.UI.Test
 
         protected override void OnRender(RenderEventArgs args)
         {
-            var s1 = new Subject<int>();
-            var s2 = new Subject<int?>();
-            int? foo = null;
-            _drawReference = args.Renderer.FillRectangle(_drawReference, 20, 20, 100, 60, Color.LightGray);
-            this.Style.SetProperty("border.size", 5);
-            this.Style.SetProperty("border.size", foo);
-            this.Style.BindProperty("border.size", s1);
-            this.Style.BindProperty("border.size", s2);
-            s1.Next(9);
-            s2.Next(null);
+            // This is only test drawing code
+            _drawReference = args.Renderer.FillRectangle(_drawReference, 200, 200, 100, 60, Color.LightGray);
 
             base.OnRender(args);
         }
@@ -32,6 +25,7 @@ namespace Silk.NET.UI.Test
         protected override void CreateFor(Component component)
         {
             new Button("foo").WithClasses("bar").AddTo(component);
+            new Panel("panel").AddTo(component);
         }
     }
 
@@ -46,6 +40,12 @@ namespace Silk.NET.UI.Test
                 },
                 BorderColor = "black"
             });
+            Add(Selector.ForType(typeof(Panel)), new Style()
+            {
+                BackgroundColor = Color.Beige,
+                BorderSize = 1,
+                BorderColor = "black"
+            });
         }
     }
 
@@ -57,6 +57,13 @@ namespace Silk.NET.UI.Test
         {
             // Test output
             Console.WriteLine("Id: " + Children[0].Id);
+
+            var panel = this.Children["panel"];
+
+            panel.X = 10;
+            panel.Y = 10;
+            panel.Width = 150;
+            panel.Height = 120;
         }
     }
 

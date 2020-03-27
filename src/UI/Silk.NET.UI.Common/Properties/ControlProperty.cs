@@ -6,6 +6,8 @@ namespace Silk.NET.UI
     {
         string Name { get; }
         bool ChangeEventsEnabled { get; set; }
+        bool HasValue { get; }
+        U ConvertTo<U>();
     }
 
     internal class DisableChangeEventContext : IDisposable
@@ -31,6 +33,7 @@ namespace Silk.NET.UI
     {
         public string Name { get; }
         public abstract T Value { get; set; }
+        public bool HasValue { get; protected set; } = false;
         public bool ChangeEventsEnabled { get; set; } = true;
 
         internal event Action InternalValueChanged;
@@ -68,5 +71,12 @@ namespace Silk.NET.UI
                 ValueChanged?.Invoke();
             InternalValueChanged?.Invoke();
         }
+
+        U IControlProperty.ConvertTo<U>()
+        {
+            return ConvertTo<U>();
+        }
+
+        internal abstract U ConvertTo<U>();
     }
 }

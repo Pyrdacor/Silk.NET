@@ -317,7 +317,7 @@ namespace Silk.NET.UI
         /// <param name="name">Full qualified name of the style property</param>
         /// <typeparam name="T">Type of the expected value</typeparam>
         /// <returns>The value of the style property</returns>
-        public PropertyValue<T> Get<T>(string name)
+        public T Get<T>(string name)
         {
             return Get<T>(name, () => GetDefault<T>(name));
         }
@@ -331,12 +331,12 @@ namespace Silk.NET.UI
         /// <param name="defaultValue"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public PropertyValue<T> Get<T>(string name, T defaultValue)
+        public T Get<T>(string name, T defaultValue) where T : struct
         {
             return Get<T>(name, () => defaultValue);
         }
 
-        private PropertyValue<T> Get<T>(string name, Func<T> defaultValueProvider)
+        private T Get<T>(string name, Func<T> defaultValueProvider)
         {
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
@@ -344,26 +344,22 @@ namespace Silk.NET.UI
             name = name.ToLower();
 
             if (!_styleProperties.ContainsKey(name))
-                return null;
-
-            var result = _styleProperties[name] as ControlProperty<T>;
-
-            if (result == null) // not of the correct type
-                throw new InvalidCastException($"Style property `{name}` is not of type `{typeof(T).Name}`.");
-
-            if (result.Value != null)
-                return new PropertyValue<T>(result.Value);
-
-            int dotPosition = name.IndexOf('.');
-            
-            if (dotPosition == -1)
             {
-                return new PropertyValue<T>(defaultValueProvider());
+                int dotPosition = name.IndexOf('.');
+
+                if (dotPosition == -1)
+                {
+                    return defaultValueProvider();
+                }
+                else
+                {
+                    return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider);
+                }
             }
-            else
-            {
-                return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider);
-            }
+
+            var property = _styleProperties[name];
+
+            return property.HasValue ? property.ConvertTo<T>() : defaultValueProvider();
         }
 
         /// <summary>
@@ -379,7 +375,9 @@ namespace Silk.NET.UI
             if (!DefaultStyleProperties.ContainsKey(name))
                 return default(T);
 
-            return (DefaultStyleProperties[name] as ControlProperty<T>).Value;
+            var property = DefaultStyleProperties[name];
+
+            return property.HasValue ? property.ConvertTo<T>() : default(T);
         }
 
         internal bool SetStyleProperty(string name, object value)

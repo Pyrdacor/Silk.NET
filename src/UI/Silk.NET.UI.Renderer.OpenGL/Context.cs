@@ -36,15 +36,35 @@ namespace Silk.NET.UI.Renderer.OpenGL
             dimensions.DimensionsChanged += () => Resize(dimensions.Width, dimensions.Height);
         }
 
+        private static Matrix4x4 CreateOrtho2D(float left, float right, float top, float bottom, float near = -1.0f, float far = 1.0f)
+        {
+            // width
+            float w = right - left;
+            // height
+            float h = top - bottom; // swap y so 0,0 for drawing is in the upper-left corner
+            // depth
+            float d = far - near;
+
+            return new Matrix4x4()
+            {
+                M11 = 2.0f / w,   M12 = 0.0f,       M13 = 0.0f,       M14 = -(right + left) / w,
+                M21 = 0.0f,       M22 = 2.0f / h,   M23 = 0.0f,       M24 = -(bottom + top) / h,
+                M31 = 0.0f,       M32 = 0.0f,       M33 = 2.0f / d,   M34 = -(far + near) / d,
+                M41 = 0.0f,       M42 = 0.0f,       M43 = 0.0f,       M44 = 1.0f
+            };
+        }
+
         public void Resize(int width, int height)
         {
             State.ClearMatrices();
             State.PushModelViewMatrix(Matrix4x4.Identity);
             State.PushUnzoomedModelViewMatrix(Matrix4x4.Identity);
-            State.PushProjectionMatrix(Matrix4x4.CreateOrthographic(width, height, 0.0f, 1.0f));
+            State.PushProjectionMatrix(CreateOrtho2D(0.0f, width, 0.0f, height, 0.0f, 1.0f));
 
             _width = width;
             _height = height;
+
+            State.Gl.Viewport(new Size(_width, _height));
 
             SetRotation(_rotation, true);
         }
