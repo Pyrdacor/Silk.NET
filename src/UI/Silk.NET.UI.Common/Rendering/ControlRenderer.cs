@@ -61,14 +61,19 @@ namespace Silk.NET.UI
             return RunDrawCall(reference, () => _renderer.FillRectangle(x, y, width, height, color));
         }
 
-        public int DrawLine(int? reference, int x1, int y1, int x2, int y2, Color color)
+        public int DrawRectangleLine(int? reference, int x, int y, int width, int height, Color color, LineStyle lineStyle)
         {
-            return RunDrawCall(reference, () => _renderer.FillRectangle(x1, y1, x2, y2, color));
+            return RunDrawCall(reference, () => _renderer.DrawRectangleLine(x, y, width, height, color, lineStyle));
         }
 
         public int DrawImage(int? reference, int x, int y, Image image, Color? colorOverlay = null)
         {
             return RunDrawCall(reference, () => _renderer.DrawImage(x, y, image, colorOverlay));
+        }
+
+        public int DrawTriangle(int? reference, int x1, int y1, int x2, int y2, int x3, int y3, Color color)
+        {
+            return RunDrawCall(reference, () => _renderer.DrawTriangle(x1, y1, x2, y2, x3, y3, color));
         }
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Specialized;
+using System.Data;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -130,9 +132,21 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return renderObjectIndex;
         }
 
-        public int DrawLine(int x1, int y1, int x2, int y2, Color color)
-        {           
-            return FillRectangle(Math.Min(x1, x2), Math.Min(y1, y2), Math.Abs(x2 - x1), Math.Abs(y2 - y1), color);
+        public int DrawRectangleLine(int x, int y, int width, int height, Color color, LineStyle lineStyle)
+        {
+            switch (lineStyle)
+            {
+                case LineStyle.Solid:
+                    return FillRectangle(x, y, width, height, color);
+                case LineStyle.Dotted:
+                    // TODO
+                    return -1;
+                case LineStyle.Dashed:
+                    // TODO
+                    return -1;
+                default:
+                    return -1;
+            }
         }
 
         public int DrawImage(int x, int y, Image image, Color? colorOverlay = null)
@@ -152,6 +166,30 @@ namespace Silk.NET.UI.Renderer.OpenGL
             sprite.Visible = true;
 
             _renderNodes.Add(renderObjectIndex, sprite);
+
+            return renderObjectIndex;
+        }
+
+        public int DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color)
+        {
+            var p1 = new Point(x1, y1);
+            var p2 = new Point(x2, y2);
+            var p3 = new Point(x3, y3);
+
+            if (p1 == p2 || p1 == p3 || p2 == p3)
+                return -1;
+
+            int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
+            var shape = Shape.CreateTriangle(_renderDimensionReference, p1, p2, p3);
+
+            shape.X = Util.Min(x1, x2, x3);
+            shape.Y = Util.Min(y1, y2, y3);
+            shape.Color = color;
+            shape.DisplayLayer = _displayLayer++; // last draw call -> last rendering (= highest display layer)
+            shape.Layer = _renderLayers[Layer.Triangles];
+            shape.Visible = true;
+
+            _renderNodes.Add(renderObjectIndex, shape);
 
             return renderObjectIndex;
         }

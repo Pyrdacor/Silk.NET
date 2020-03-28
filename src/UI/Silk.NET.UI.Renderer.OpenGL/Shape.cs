@@ -31,8 +31,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
         public const int EllipseVertices = 65; // 1 center, 64 outline (drawn as triangle fan)
         public const int RoundRectVertices = 29; // 1 center, 7 for each corner (drawn as triangle fan)
 
-        protected int? _drawIndex = null;        
-        private byte _displayLayer = 0;
         private Type _type = Type.Triangle;
         private Point[] _points;
 
@@ -58,17 +56,17 @@ namespace Silk.NET.UI.Renderer.OpenGL
             };
         }
 
-        public Shape CreateTriangle(RenderDimensionReference renderDimensionReference, Point p1, Point p2, Point p3)
+        public static Shape CreateTriangle(RenderDimensionReference renderDimensionReference, Point p1, Point p2, Point p3)
         {
             return new Shape(Type.Triangle, renderDimensionReference, p1, p2, p3 );
         }
 
-        public Shape CreateEllipse(RenderDimensionReference renderDimensionReference, int width, int height)
+        public static Shape CreateEllipse(RenderDimensionReference renderDimensionReference, int width, int height)
         {
             return new Shape(Type.Ellipse, renderDimensionReference, new Point(width, height));
         }
 
-        public Shape CreateRoundRect(RenderDimensionReference renderDimensionReference, int width, int height)
+        public static Shape CreateRoundRect(RenderDimensionReference renderDimensionReference, int width, int height)
         {
             return new Shape(Type.RoundRect, renderDimensionReference, new Point(width, height));
         }
@@ -93,20 +91,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 Type.RoundRect => points[0].Y,
                 _ => 0
             };
-        }
-
-        public byte DisplayLayer
-        {
-            get => _displayLayer;
-            set
-            {
-                if (_displayLayer == value)
-                    return;
-
-                _displayLayer = value;
-
-                UpdateDisplayLayer();
-            }
         }
 
         protected override void AddToLayer()
@@ -167,12 +151,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
             base.Resize(width, height);
 
             UpdatePosition();
-        }
-
-        protected override void UpdateDisplayLayer()
-        {
-            if (_drawIndex.HasValue)
-                Layer.UpdateDisplayLayer(_drawIndex.Value, _displayLayer);
         }
 
         private Point[] GetEllipsePoints()

@@ -44,5 +44,72 @@ namespace Silk.NET.UI
             else
                 throw new InvalidCastException();
         }
+
+        internal override void SetValue<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (type == _enumType)
+                Value = (int)(object)value;
+            else if (Util.CheckGenericType(type, typeof(Nullable<>)) && type.GenericTypeArguments[0] == _enumType)
+                Value = (int?)(object)value;
+            else if (type == typeof(string))
+            {
+                string stringValue = (string)(object)value;
+
+                try
+                {
+                    Value = int.Parse(stringValue);
+                }
+                catch
+                {
+                    Value = (int)Enum.Parse(_enumType, stringValue);
+                }
+            }
+            else if (type == typeof(int))
+                Value = (int)(object)value;
+            else if (type == typeof(int?))
+                Value = (int?)(object)value;
+            else
+                throw new InvalidCastException();
+        }
+
+        internal override bool IsEqual<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (type == _enumType)
+                return _value.HasValue && (int)_value.Value == (int)(object)value;
+            else if (Util.CheckGenericType(type, typeof(Nullable<>)) && type.GenericTypeArguments[0] == _enumType)
+            {
+                var nullableInt = (int?)(object)value;
+                if (nullableInt.HasValue != _value.HasValue)
+                    return false;
+                return !nullableInt.HasValue || nullableInt == (int)_value;
+            }
+            else if (type == typeof(string))
+            {
+                string stringValue = (string)(object)value;
+
+                if (stringValue == null)
+                    return !_value.HasValue;
+                else if (!_value.HasValue)
+                    return false;
+
+                return _value.Value.ToString() == stringValue ||
+                    Enum.ToObject(_enumType, _value.Value).ToString() == stringValue;
+            }
+            else if (type == typeof(int))
+                return _value.HasValue && (int)_value.Value == (int)(object)value;
+            else if (type == typeof(int?))
+            {
+                var nullableInt = (int?)(object)value;
+                if (nullableInt.HasValue != _value.HasValue)
+                    return false;
+                return !nullableInt.HasValue || nullableInt == (int)_value;
+            }
+            else
+                return false;
+        }
     }
 }

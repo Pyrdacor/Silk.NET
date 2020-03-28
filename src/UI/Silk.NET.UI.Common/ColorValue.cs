@@ -81,6 +81,49 @@ namespace Silk.NET.UI
             _color = Color.FromArgb(color);
         }
 
+        public ColorValue Darken(float factor)
+        {
+            return ChangeBrightness(-factor);
+        }
+
+        public ColorValue Lighten(float factor)
+        {
+            return ChangeBrightness(factor);
+        }
+
+        /// <summary>
+        /// Changes the brightness of the color and returns the
+        /// modified color. This color object is not affected.
+        /// 
+        /// Factor -1 means full darkening.
+        /// Factor +1 means full brightness.
+        /// Factor 0 means no change.
+        /// </summary>
+        /// <param name="factor">A factor between -1 and 1.</param>
+        /// <returns></returns>
+        public ColorValue ChangeBrightness(float factor)
+        {
+            float red = (float)_color.R;
+            float green = (float)_color.G;
+            float blue = (float)_color.B;
+
+            if (factor < 0)
+            {
+                factor = 1.0f + factor;
+                red *= factor;
+                green *= factor;
+                blue *= factor;
+            }
+            else
+            {
+                red = (255.0f - red) * factor + red;
+                green = (255.0f - green) * factor + green;
+                blue = (255.0f - blue) * factor + blue;
+            }
+
+            return new ColorValue(Color.FromArgb(_color.A, (int)red, (int)green, (int)blue));
+        }
+
         public static implicit operator ColorValue(Color value)
         {
             return new ColorValue(value);
@@ -193,7 +236,7 @@ namespace Silk.NET.UI
 
             var color = Color.FromName(value);
 
-            if (color == Color.Transparent)
+            if (color.A == 0 && color.R == 0 && color.G == 0 && color.B == 0)
                 throw new FormatException($"Invalid color value format: {value}");
 
             return new ColorValue(color);

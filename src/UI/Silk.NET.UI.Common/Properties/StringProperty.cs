@@ -29,12 +29,25 @@ namespace Silk.NET.UI
 
         internal override U ConvertTo<U>()
         {
-            var type = typeof(U);
-
-            if (type == typeof(string))
+            if (typeof(U) == typeof(string))
                 return (U)(object)_value;
             else
                 throw new InvalidCastException();
+        }
+
+        internal override void SetValue<U>(U value)
+        {
+            Value = value.ToString();
+        }
+
+        internal override bool IsEqual<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (type == typeof(string))
+                return _value == (string)(object)value;
+            else
+                return false;
         }
     }
 }

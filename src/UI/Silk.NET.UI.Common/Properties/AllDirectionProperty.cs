@@ -115,5 +115,48 @@ namespace Silk.NET.UI
             else
                 throw new InvalidCastException();
         }
+
+        internal override void SetValue<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (Util.CheckGenericType(type, typeof(AllDirectionStyleValue<>)) && type.GenericTypeArguments[0] == typeof(T))
+                Value = (AllDirectionStyleValue<T>)(object)value;
+            else if (Util.CheckGenericType(type, typeof(Nullable<>)) && Util.CheckGenericType(type.GenericTypeArguments[0], typeof(AllDirectionStyleValue<>)) &&
+                type.GenericTypeArguments[0].GenericTypeArguments[0] == typeof(T))
+                Value = (AllDirectionStyleValue<T>?)(object)value;
+            else if (type == typeof(string))
+                Value = (AllDirectionStyleValue<T>)(string)(object)value;
+            else if (type == typeof(T))
+                Value = (AllDirectionStyleValue<T>)(T)(object)value;
+            else if (Util.CheckGenericType(type, typeof(Tuple<>)))
+                // TODO?
+                Value = (AllDirectionStyleValue<T>)(object)value;
+            else
+                throw new InvalidCastException();
+        }
+
+        internal override bool IsEqual<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (Util.CheckGenericType(type, typeof(AllDirectionStyleValue<>)) && type.GenericTypeArguments[0] == typeof(T))
+                return _value.HasValue && _value.Value == (AllDirectionStyleValue<T>)(object)value;
+            else if (Util.CheckGenericType(type, typeof(Nullable<>)) && Util.CheckGenericType(type.GenericTypeArguments[0], typeof(AllDirectionStyleValue<>)) &&
+                type.GenericTypeArguments[0].GenericTypeArguments[0] == typeof(T))
+                // TODO
+                return false;
+            else if (type == typeof(string))
+                // TODO
+                return false;
+            else if (type == typeof(T))
+                // TODO
+                return false;
+            else if (Util.CheckGenericType(type, typeof(Tuple<>)))
+                // TODO
+                return false;
+            else
+                return false;
+        }
     }
 }

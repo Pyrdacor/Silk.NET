@@ -58,9 +58,17 @@ namespace Silk.NET.UI
             }
         }
 
+        private static IControlProperty CreateProperty<T>(string name, T value)
+        {
+            var defaultProperty = DefaultStyleProperties[name];
+            var property = CreateProperty(name, defaultProperty.GetPropertyType(), defaultProperty.GetValue());
+            property.SetValue<T>(value);
+            return property;
+        }
+
         private static IControlProperty CreateProperty(string name, Type fieldType, object value)
         {
-            if (value == null)
+            if (Object.ReferenceEquals(value, null))
                 return null;
 
             if (Util.CheckGenericType(fieldType, typeof(Nullable<>)))
@@ -114,19 +122,6 @@ namespace Silk.NET.UI
             }
         }
 
-        private ControlProperty<T> GetProperty<T>(string name)
-        {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-
-            name = name.ToLower();
-
-            if (!_styleProperties.ContainsKey(name))
-                return null;
-
-            return _styleProperties[name] as ControlProperty<T>;
-        }
-
         public void BindProperty<T>(string name, Observable<T> variable)
         {
             if (name == null)
@@ -138,148 +133,21 @@ namespace Silk.NET.UI
             if (variable == null)
                 throw new ArgumentNullException(nameof(variable));
 
-            if (typeof(T).IsClass)
-                BindReferenceProperty(name, BindHelper<T>(variable));
-            else
-                BindValueProperty(name, BindHelper<T>(variable));
+            _styleProperties[name].Bind<T>(variable);
         }
 
-        private dynamic BindHelper<T>(Observable<T> variable)
+        internal void SetProperty<T>(string name, T value)
         {
-            return variable;
-        }
-
-        private void BindReferenceProperty<T>(string name, Observable<T> variable) where T : class
-        {
-            variable.SubscribeUntilCompleted(value =>
-            {
-                if (value == null)
-                {
-                    _styleProperties.Remove(name);
-                    return;
-                }
-
-                if (!SetStyleProperty(name, value))
-                {
-                    var property = GetProperty<T>(name);
-
-                    if (property == null)
-                        throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
-
-                    property.Bind(variable);
-                }
-            });
-        }
-
-        private void BindValueProperty<T>(string name, Observable<T> variable) where T : struct
-        {
-            variable.SubscribeUntilCompleted(value =>
-            {
-                if (!SetStyleProperty(name, value))
-                {
-                    var property = GetProperty<T>(name);
-
-                    if (property == null && !Util.CheckGenericType(typeof(T), typeof(Nullable<>)))
-                    {
-                        var nullableProperty = GetProperty<T?>(name);
-
-                        if (nullableProperty != null)
-                        {
-                            nullableProperty.Bind(variable.Map(value => new Nullable<T>(value)));
-                            return;
-                        }
-                    }
-
-                    if (property == null)
-                        throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
-
-                    property.Bind(variable);
-                }
-            });
-        }
-
-        private void BindValueProperty<T>(string name, Observable<T?> variable) where T : struct
-        {
-            variable.SubscribeUntilCompleted(value =>
-            {
-                if (value == null)
-                {
-                    _styleProperties.Remove(name);
-                    return;
-                }
-
-                if (!SetStyleProperty(name, value))
-                {
-                    var property = GetProperty<T>(name);
-
-                    if (property == null && !Util.CheckGenericType(typeof(T), typeof(Nullable<>)))
-                    {
-                        var nullableProperty = GetProperty<T?>(name);
-
-                        if (nullableProperty != null)
-                        {
-                            nullableProperty.Bind(variable);
-                            return;
-                        }
-                    }
-
-                    if (property == null)
-                        throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
-
-                    property.Bind(variable.Filter(v => v.HasValue).Map(v => v.Value));
-                }
-            });
-        }
-
-        private void SetReferenceProperty<T>(string name, T value) where T : class
-        {
-            if (!SetStyleProperty(name, value))
-            {
-                var property = GetProperty<T>(name);
-
-                if (property == null)
-                    throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
-
-                property.Value = value;
-            }
-        }
-
-        private void SetValueProperty<T>(string name, T value) where T : struct
-        {
-            if (!SetStyleProperty(name, value))
-            {
-                var property = GetProperty<T>(name);
-
-                if (property == null && !Util.CheckGenericType(typeof(T), typeof(Nullable<>)))
-                {
-                    var nullableProperty = GetProperty<T?>(name);
-
-                    if (nullableProperty != null)
-                    {
-                        nullableProperty.Value = value;
-                        return;
-                    }
-                }
-
-                if (property == null)
-                    throw new ArgumentException($"Style property `{name}` can not be set to a value of type `{typeof(T).Name}`.");
-
-                property.Value = value;
-            }
-        }
-
-        public void SetProperty(string name, dynamic value)
-        {
-            if (value == null)
+            if (Object.ReferenceEquals(value, null)) // don't use "== null" here
             {
                 _styleProperties.Remove(name);
                 return;
             }
 
-            if (value.GetType().IsClass)
-                SetReferenceProperty(name, value);
+            if (_styleProperties.ContainsKey(name))
+                _styleProperties[name].SetValue<T>(value);
             else
-                SetValueProperty(name, value);
+                _styleProperties.Add(name, CreateProperty<T>(name, value));
         }
 
         /// <summary>
@@ -331,7 +199,7 @@ namespace Silk.NET.UI
         /// <param name="defaultValue"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Get<T>(string name, T defaultValue) where T : struct
+        public T Get<T>(string name, T defaultValue)
         {
             return Get<T>(name, () => defaultValue);
         }
@@ -390,7 +258,7 @@ namespace Silk.NET.UI
 
             if (!_styleProperties.ContainsKey(name))
             {
-                var property = CreateProperty(name, value.GetType(), value);
+                var property = CreateProperty(name, DefaultStyleProperties[name].GetPropertyType(), value);
 
                 if (property != null)
                 {

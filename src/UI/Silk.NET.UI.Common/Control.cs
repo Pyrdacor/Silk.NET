@@ -51,6 +51,8 @@ namespace Silk.NET.UI
 
         private BoolProperty _visible = new BoolProperty(nameof(Visible), true);
         private BoolProperty _enabled = new BoolProperty(nameof(Enabled), true);
+        private BoolProperty _hovered = new BoolProperty(nameof(Hovered), false);
+        private BoolProperty _focused = new BoolProperty(nameof(Focused), false);
 
         public bool Visible
         {
@@ -67,6 +69,16 @@ namespace Silk.NET.UI
         {
             get => _enabled.Value ?? true;
             set => _enabled.Value = value;
+        }
+        public bool Hovered
+        {
+            get => Enabled && Visible && _hovered.HasValue && _hovered.Value.Value;
+            set => _hovered.Value = value && Enabled && Visible;
+        }
+        public bool Focused
+        {
+            get => Enabled && Visible && _focused.HasValue && _focused.Value.Value;
+            set => _focused.Value = value && Enabled && Visible;
         }
 
         #endregion
@@ -163,7 +175,7 @@ namespace Silk.NET.UI
 
 
         public string Id { get; internal set; }
-        public List<string> Classes { get; } = new List<string>();
+        public List<string> Classes { get; } = new List<string>(); // TODO: make it readonly?
         internal ControlList InternalChildren { get; }
         public Component Parent
         {
@@ -248,6 +260,26 @@ namespace Silk.NET.UI
             var args = new RenderEventArgs(ControlRenderer);
             OnRender(args);
             Render?.Invoke(this, args);
+        }
+
+        protected void OverrideStyle<T>(string name, T value)
+        {
+            Style.SetProperty(name, value);
+        }
+
+        protected void OverrideStyleIfUndefined<T>(string name, T value)
+        {
+            var type = typeof(T);
+
+            // AllDirectionStyleValue<ColorValue> will fail to convert from/to System.Drawing.Color
+            // so we will convert colors to a ColorValue here.
+            if (type == typeof(System.Drawing.Color))
+            {
+                OverrideStyleIfUndefined(name, new ColorValue((Color)(object)value));
+                return;
+            }
+
+            Style.SetProperty(name, Style.Get<T>(name, value));
         }
     }
 

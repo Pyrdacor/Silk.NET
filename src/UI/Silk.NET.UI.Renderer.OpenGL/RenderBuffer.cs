@@ -132,19 +132,17 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (colorBufferIndex != index)
                 throw new IndexOutOfRangeException("Invalid color buffer index");
 
-            _colorBuffer.Add(shape.Color, colorBufferIndex + 1);
-            _colorBuffer.Add(shape.Color, colorBufferIndex + 2);
-            _colorBuffer.Add(shape.Color, colorBufferIndex + 3);
+            for (int i = 1; i < vertexPositions.Length; ++i)
+                _colorBuffer.Add(shape.Color, colorBufferIndex + i);
 
-            byte layer = shape.DisplayLayer;
+            var layer = shape.DisplayLayer;
             int layerBufferIndex = _layerBuffer.Add(layer);
 
             if (layerBufferIndex != index)
                 throw new IndexOutOfRangeException("Invalid layer buffer index");
 
-            _layerBuffer.Add(layer, layerBufferIndex + 1);
-            _layerBuffer.Add(layer, layerBufferIndex + 2);
-            _layerBuffer.Add(layer, layerBufferIndex + 3);
+            for (int i = 1; i < vertexPositions.Length; ++i)
+                _layerBuffer.Add(layer, layerBufferIndex + i);
 
             return index;
         }
@@ -211,29 +209,25 @@ namespace Silk.NET.UI.Renderer.OpenGL
             _textureAtlasOffsetBuffer.Update(index + 3, x, (short)(y + height));
         }
 
-        public void UpdateColor(int index, Color color)
+        public void UpdateColor(int index, Color color, int numVertices)
         {
             if (_colorBuffer != null)
             {
-                _colorBuffer.Update(index, color);
-                _colorBuffer.Update(index + 1, color);
-                _colorBuffer.Update(index + 2, color);
-                _colorBuffer.Update(index + 3, color);
+                for (int i = 0; i < numVertices; ++i)
+                    _colorBuffer.Update(index + i, color);
             }
         }
 
-        public void UpdateDisplayLayer(int index, uint displayLayer)
+        public void UpdateDisplayLayer(int index, uint displayLayer, int numVertices)
         {
             if (_layerBuffer != null)
             {
-                _layerBuffer.Update(index, displayLayer);
-                _layerBuffer.Update(index + 1, displayLayer);
-                _layerBuffer.Update(index + 2, displayLayer);
-                _layerBuffer.Update(index + 3, displayLayer);
+                for (int i = 0; i < numVertices; ++i)
+                    _layerBuffer.Update(index + i, displayLayer);
             }
         }
 
-        public void FreeDrawIndex(int index)
+        public void FreeDrawIndex(int index, int numVertices)
         {
             /*int newSize = -1;
 
@@ -249,7 +243,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 }
             }*/
 
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < numVertices; ++i)
             {
                 _positionBuffer.Update(index + i, short.MaxValue, short.MaxValue); // ensure it is not visible
                 _positionBuffer.Remove(index + i);
@@ -257,26 +251,20 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             if (_textureAtlasOffsetBuffer != null)
             {
-                _textureAtlasOffsetBuffer.Remove(index);
-                _textureAtlasOffsetBuffer.Remove(index + 1);
-                _textureAtlasOffsetBuffer.Remove(index + 2);
-                _textureAtlasOffsetBuffer.Remove(index + 3);
+                for (int i = 0; i < numVertices; ++i)
+                    _textureAtlasOffsetBuffer.Remove(index + i);
             }
 
             if (_colorBuffer != null)
             {
-                _colorBuffer.Remove(index);
-                _colorBuffer.Remove(index + 1);
-                _colorBuffer.Remove(index + 2);
-                _colorBuffer.Remove(index + 3);
+                for (int i = 0; i < numVertices; ++i)
+                    _colorBuffer.Remove(index + i);
             }
 
             if (_layerBuffer != null)
             {
-                _layerBuffer.Remove(index);
-                _layerBuffer.Remove(index + 1);
-                _layerBuffer.Remove(index + 2);
-                _layerBuffer.Remove(index + 3);
+                for (int i = 0; i < numVertices; ++i)
+                    _layerBuffer.Remove(index + i);
             }
 
             // TODO: this code causes problems. commented out for now

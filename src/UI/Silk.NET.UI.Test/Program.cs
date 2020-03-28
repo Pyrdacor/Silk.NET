@@ -5,21 +5,6 @@ using Silk.NET.UI.Controls;
 
 namespace Silk.NET.UI.Test
 {
-    class Button : Control
-    {
-        private int? _drawReference = null;
-
-        public Button(string? id) : base(id) { }
-
-        protected override void OnRender(RenderEventArgs args)
-        {
-            // This is only test drawing code
-            _drawReference = args.Renderer.FillRectangle(_drawReference, 200, 200, 100, 60, Color.LightGray);
-
-            base.OnRender(args);
-        }
-    }
-
     class MyTemplate : Template
     {
         protected override void CreateFor(Component component)
@@ -33,13 +18,13 @@ namespace Silk.NET.UI.Test
     {
         public MyStyles()
         {
-            Add(Selector.ForId("foo"), new Style()
+            /*Add(Selector.ForId("foo"), new Style()
             {
                 Background = new BackgroundStyle {
                     Color = "yellow"
                 },
                 BorderColor = "black"
-            });
+            });*/
             Add(Selector.ForType(typeof(Panel)), new Style()
             {
                 BackgroundColor = Color.Beige,
@@ -60,8 +45,8 @@ namespace Silk.NET.UI.Test
 
             var panel = this.Children["panel"];
 
-            panel.X = 10;
-            panel.Y = 10;
+            panel.X = 210;
+            panel.Y = 210;
             panel.Width = 150;
             panel.Height = 120;
         }

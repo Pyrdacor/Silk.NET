@@ -10,8 +10,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
     internal abstract class RenderNode : IRenderNode
     {
+        protected int? _drawIndex = null;
         private int _x = short.MaxValue;
         private int _y = short.MaxValue;
+        private uint _displayLayer = 0;
+        private Color _color = Color.White;
         private bool _visible = false;
         private RenderLayer _layer = null;
         private bool _visibleRequest = false;
@@ -55,11 +58,33 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
         }
 
+        public uint DisplayLayer
+        {
+            get => _displayLayer;
+            set
+            {
+                if (_displayLayer == value)
+                    return;
+
+                _displayLayer = value;
+
+                UpdateDisplayLayer();
+            }
+        }
+
         public Color Color
         {
-            get;
-            set;
-        } = Color.White;
+            get => _color;
+            set
+            {
+                if (_color == value)
+                    return;
+
+                _color = value;
+                
+                UpdateColor();
+            }
+        }
 
         public RenderLayer Layer
         {
@@ -114,7 +139,17 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public abstract Point[] ProvideVertexPositions();
 
-        protected abstract void UpdateDisplayLayer();
+        protected void UpdateDisplayLayer()
+        {
+            if (_drawIndex.HasValue)
+                Layer.UpdateDisplayLayer(_drawIndex.Value, _displayLayer);
+        }
+
+        protected void UpdateColor()
+        {
+            if (_drawIndex.HasValue)
+                Layer.UpdateColor(_drawIndex.Value, _color);
+        }
 
         bool CheckOnScreen()
         {

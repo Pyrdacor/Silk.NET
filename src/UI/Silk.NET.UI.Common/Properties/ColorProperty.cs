@@ -64,5 +64,69 @@ namespace Silk.NET.UI
             else
                 throw new InvalidCastException();
         }
+
+        internal override void SetValue<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (type == typeof(ColorValue))
+                Value = (ColorValue)(object)value;
+            else if (type == typeof(ColorValue?))
+                Value = (ColorValue?)(object)value;
+            else if (type == typeof(string))
+            {
+                string stringValue = (string)(object)value;
+
+                if (stringValue == null)
+                    Value = null;
+                else
+                    Value = (ColorValue)stringValue;
+            }
+            else if (type == typeof(int))
+                Value = new ColorValue((int)(object)value);
+            else if (type == typeof(Color))
+                Value = (ColorValue)(Color)(object)value;
+            else
+                throw new InvalidCastException();
+        }
+
+        internal override bool IsEqual<U>(U value)
+        {
+            var type = typeof(U);
+
+            if (type == typeof(ColorValue))
+                return _value.HasValue && _value.Equals((ColorValue)(object)value);
+            else if (type == typeof(ColorValue?))
+            {
+                ColorValue? nullableColor = (ColorValue?)(object)value;
+                if (nullableColor.HasValue != _value.HasValue)
+                    return false;
+                return !nullableColor.HasValue || _value.Value.Equals(nullableColor);
+            }
+            else if (type == typeof(string))
+            {
+                string stringValue = (string)(object)value;
+
+                if (stringValue == null)
+                    return !_value.HasValue;
+                else if (!_value.HasValue)
+                    return false;
+
+                try
+                {
+                    return _value.Equals((ColorValue)stringValue);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else if (type == typeof(int))
+                return _value.HasValue && _value.Equals(new ColorValue((int)(object)value));
+            else if (type == typeof(Color))
+                return _value.HasValue && _value.Equals((ColorValue)(Color)(object)value);
+            else
+                return false;
+        }
     }
 }

@@ -9,9 +9,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
     /// </summary>
     internal class Sprite : RenderNode
     {
-        protected int? _drawIndex = null;
         private Point? _textureAtlasOffset = null;
-        private uint _displayLayer = 0;
 
         public Sprite(int width, int height, int textureAtlasX, int textureAtlasY, RenderDimensionReference renderDimensionReference)
             : base(width, height, renderDimensionReference)
@@ -36,20 +34,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 _textureAtlasOffset = value;
 
                 UpdateTextureAtlasOffset();
-            }
-        }
-
-        public uint DisplayLayer
-        {
-            get => _displayLayer;
-            set
-            {
-                if (_displayLayer == value)
-                    return;
-
-                _displayLayer = value;
-
-                UpdateDisplayLayer();
             }
         }
 
@@ -102,12 +86,6 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
             UpdatePosition();
             UpdateTextureAtlasOffset();
-        }
-
-        protected override void UpdateDisplayLayer()
-        {
-            if (_drawIndex.HasValue)
-                Layer.UpdateDisplayLayer(_drawIndex.Value, _displayLayer);
         }
     }
 }

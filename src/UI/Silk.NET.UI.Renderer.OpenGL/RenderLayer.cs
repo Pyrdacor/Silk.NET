@@ -22,6 +22,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         private bool _disposed = false;
         private Texture _texture = null;
         private readonly RenderBuffer _renderBuffer = null;
+        private readonly int _numVerticesPerNode = 0;
 
         public Layer Layer { get; } = Layer.None;
 
@@ -67,14 +68,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (layer == Layer.None)
                 throw new ArgumentException($"Layer `{nameof(Layer.None)}` can not be used as a type of real render layers.");
 
+            _numVerticesPerNode = layer switch
+            {
+                Layer.Triangles => Shape.TriangleVertices,
+                Layer.Ellipsis => Shape.EllipseVertices,
+                Layer.RoundRects => Shape.RoundRectVertices,
+                _ => 6 // 2 triangles with 3 vertices each
+            };
             _renderBuffer = new RenderBuffer(layer == Layer.Images,
-                layer switch
-                {
-                    Layer.Triangles => Shape.TriangleVertices,
-                    Layer.Ellipsis => Shape.EllipseVertices,
-                    Layer.RoundRects => Shape.RoundRectVertices,
-                    _ => 6 // 2 triangles with 3 vertices each
-                },
+                _numVerticesPerNode,
                 layer switch
                 {
                     Layer.Ellipsis => PrimitiveType.TriangleFan,
@@ -143,7 +145,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void FreeDrawIndex(int index)
         {
-            _renderBuffer.FreeDrawIndex(index);
+            _renderBuffer.FreeDrawIndex(index, _numVerticesPerNode);
         }
 
         public void UpdatePosition(int index, Sprite sprite)
@@ -163,9 +165,13 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void UpdateDisplayLayer(int index, uint displayLayer)
         {
-            _renderBuffer.UpdateDisplayLayer(index, displayLayer);
+            _renderBuffer.UpdateDisplayLayer(index, displayLayer, _numVerticesPerNode);
         }
 
+        public void UpdateColor(int index, Color color)
+        {
+            _renderBuffer.UpdateColor(index, color, _numVerticesPerNode);
+        }
         public void Dispose()
         {
             Dispose(true);

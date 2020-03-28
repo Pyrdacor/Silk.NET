@@ -8,6 +8,11 @@ namespace Silk.NET.UI
         bool ChangeEventsEnabled { get; set; }
         bool HasValue { get; }
         U ConvertTo<U>();
+        void Bind<U>(Observable<U> variable);
+        void SetValue<U>(U value);
+        bool IsEqual<U>(U value);
+        Type GetPropertyType();
+        object GetValue();
     }
 
     internal class DisableChangeEventContext : IDisposable
@@ -49,22 +54,6 @@ namespace Silk.NET.UI
             Name = name;
         }
 
-        internal void Bind(Observable<T> variable)
-        {
-            variable?.Subscribe(value =>
-            {
-                if (!Value.Equals(value))
-                {
-                    Value = value;
-                    if (ChangeEventsEnabled)
-                    {
-                        OnValueChanged();
-                        DynamicValueChanged?.Invoke();
-                    }
-                }
-            }, error => throw error); // TODO: how to handle errors here
-        }
-
         internal void OnValueChanged()
         {
             if (ChangeEventsEnabled)
@@ -77,6 +66,44 @@ namespace Silk.NET.UI
             return ConvertTo<U>();
         }
 
+        void IControlProperty.Bind<U>(Observable<U> variable)
+        {
+            Bind<U>(variable);
+        }
+        void IControlProperty.SetValue<U>(U value)
+        {
+            SetValue(value);
+        }
+
+        bool IControlProperty.IsEqual<U>(U value)
+        {
+            return IsEqual<U>(value);
+        }
+
+        Type IControlProperty.GetPropertyType() => typeof(T);
+
+        object IControlProperty.GetValue() => Value;
+
         internal abstract U ConvertTo<U>();
+
+        internal void Bind<U>(Observable<U> variable)
+        {
+            variable?.Subscribe(value =>
+            {
+                if (!Value.Equals(value))
+                {
+                    SetValue(value);
+                    if (ChangeEventsEnabled)
+                    {
+                        OnValueChanged();
+                        DynamicValueChanged?.Invoke();
+                    }
+                }
+            }, error => throw error); // TODO: how to handle errors here
+        }
+
+        internal abstract void SetValue<U>(U value);
+        
+        internal abstract bool IsEqual<U>(U value);
     }
 }
