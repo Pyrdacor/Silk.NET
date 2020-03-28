@@ -4,6 +4,14 @@ using System.Text.RegularExpressions;
 
 namespace Silk.NET.UI
 {
+    public enum StlyeDirection
+    {
+        Top,
+        Right,
+        Bottom,
+        Left
+    }
+
     public struct AllDirectionStyleValue<T> : IEquatable<AllDirectionStyleValue<T>> where T : struct
     {
         private static readonly Regex Pattern = new Regex(@"^([^ ]+) ?([^ ]+)? ?([^ ]+)? ?([^ ]+)?\s*$", RegexOptions.Compiled);

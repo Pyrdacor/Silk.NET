@@ -1,15 +1,14 @@
-using System.Collections.Specialized;
-using System.Data;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Silk.NET.OpenGL;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
     internal class ControlRenderer : IControlRenderer
     {
-        private readonly Dictionary<Layer, RenderLayer> _renderLayers = new Dictionary<Layer, RenderLayer>();
+        internal RenderLayer SpriteRenderLayer { get; }
+        private readonly Dictionary<int, RenderLayer> _shapeRenderLayers = new Dictionary<int, RenderLayer>();
         private readonly Dictionary<int, IRenderNode> _renderNodes = new Dictionary<int, IRenderNode>();
         private readonly IndexPool _renderNodeIndexPool = new IndexPool();
         private readonly Context _context;
@@ -22,11 +21,21 @@ namespace Silk.NET.UI.Renderer.OpenGL
             _renderDimensionReference = renderDimensionReference;
             _context = new Context(renderDimensionReference);
 
-            _renderLayers.Add(Layer.Controls, new RenderLayer(Layer.Controls, null));
-            _renderLayers.Add(Layer.Images, new RenderLayer(Layer.Images, _textureAtlas.AtlasTexture));
-            _renderLayers.Add(Layer.Triangles, new RenderLayer(Layer.Triangles, null));
-            _renderLayers.Add(Layer.Ellipsis, new RenderLayer(Layer.Ellipsis, null));
-            _renderLayers.Add(Layer.RoundRects, new RenderLayer(Layer.RoundRects, null));
+            SpriteRenderLayer = new RenderLayer(_textureAtlas.AtlasTexture, 4);
+        }
+
+        internal RenderLayer GetRenderLayer(int numVertices)
+        {
+            if (!_shapeRenderLayers.ContainsKey(numVertices))
+            {
+                var renderLayer = new RenderLayer(null, numVertices);
+                _shapeRenderLayers.Add(numVertices, renderLayer);
+                return renderLayer;
+            }
+            else
+            {
+                return _shapeRenderLayers[numVertices];
+            }
         }
 
         public void StartRenderCycle()
@@ -39,7 +48,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void EndRenderCycle()
         {
-            foreach (var renderLayer in _renderLayers)
+            SpriteRenderLayer.Render();
+
+            foreach (var renderLayer in _shapeRenderLayers)
                 renderLayer.Value.Render();
         }
 
@@ -64,38 +75,29 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
 
             int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var topLine = new Sprite(width, lineSize, _renderDimensionReference);
-            var leftLine = new Sprite(lineSize, height - 2 * lineSize, _renderDimensionReference);
-            var rightLine = new Sprite(lineSize, height - 2 * lineSize, _renderDimensionReference);
-            var bottomLine = new Sprite(width, lineSize, _renderDimensionReference);
-            var layer = _renderLayers[Layer.Controls];
+            var topLine = Shape.CreateRect(this, _renderDimensionReference,
+                x, y, width, lineSize);
+            var leftLine = Shape.CreateRect(this, _renderDimensionReference,
+                x, y + lineSize, lineSize, height - 2 * lineSize);
+            var rightLine = Shape.CreateRect(this, _renderDimensionReference,
+                x + width - lineSize, y + lineSize, lineSize, height - 2 * lineSize);
+            var bottomLine = Shape.CreateRect(this, _renderDimensionReference,
+                x, y + height - lineSize, width, lineSize);
 
-            topLine.X = x;
-            topLine.Y = y;
             topLine.Color = color;
             topLine.DisplayLayer = _displayLayer;
-            topLine.Layer = layer;
             topLine.Visible = true;
 
-            leftLine.X = x;
-            leftLine.Y = y + lineSize;
             leftLine.Color = color;
             leftLine.DisplayLayer = _displayLayer;
-            leftLine.Layer = layer;
             leftLine.Visible = true;
 
-            rightLine.X = x + width - lineSize;
-            rightLine.Y = y + lineSize;
             rightLine.Color = color;
             rightLine.DisplayLayer = _displayLayer;
-            rightLine.Layer = layer;
             rightLine.Visible = true;
 
-            bottomLine.X = x;
-            bottomLine.Y = y + height - lineSize;
             bottomLine.Color = color;
             bottomLine.DisplayLayer = _displayLayer;
-            bottomLine.Layer = layer;
             bottomLine.Visible = true;
 
             ++_displayLayer;
@@ -118,16 +120,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 return -1;
 
             int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var sprite = new Sprite(width, height, _renderDimensionReference);
+            var rectShape = Shape.CreateRect(this, _renderDimensionReference,
+                x, y, width, height);
 
-            sprite.X = x;
-            sprite.Y = y;
-            sprite.Color = color;
-            sprite.DisplayLayer = _displayLayer++; // last draw call -> last rendering (= highest display layer)
-            sprite.Layer = _renderLayers[Layer.Controls];
-            sprite.Visible = true;
+            rectShape.Color = color;
+            rectShape.DisplayLayer = _displayLayer++;
+            rectShape.Visible = true;
 
-            _renderNodes.Add(renderObjectIndex, sprite);
+            _renderNodes.Add(renderObjectIndex, rectShape);
 
             return renderObjectIndex;
         }
@@ -155,14 +155,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 return -1;
 
             int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var sprite = new Sprite(image.Width, image.Height, _renderDimensionReference);
+            var textureAtlasOffset = _textureAtlas.AddTexture(image);
+            var sprite = Sprite.Create(this, _renderDimensionReference,
+                x, y, image.Width, image.Height, textureAtlasOffset.X, textureAtlasOffset.Y);
 
-            sprite.X = x;
-            sprite.Y = y;
             sprite.Color = colorOverlay ?? Color.White;
-            sprite.TextureAtlasOffset = _textureAtlas.AddTexture(image);
-            sprite.DisplayLayer = _displayLayer++; // last draw call -> last rendering (= highest display layer)
-            sprite.Layer = _renderLayers[Layer.Controls];
+            sprite.DisplayLayer = _displayLayer++;
             sprite.Visible = true;
 
             _renderNodes.Add(renderObjectIndex, sprite);
@@ -170,7 +168,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return renderObjectIndex;
         }
 
-        public int DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color)
+        public int FillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color)
         {
             var p1 = new Point(x1, y1);
             var p2 = new Point(x2, y2);
@@ -180,13 +178,24 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 return -1;
 
             int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
-            var shape = Shape.CreateTriangle(_renderDimensionReference, p1, p2, p3);
+            var shape = Shape.CreateTriangle(this, _renderDimensionReference, p1, p2, p3);
 
-            shape.X = Util.Min(x1, x2, x3);
-            shape.Y = Util.Min(y1, y2, y3);
             shape.Color = color;
-            shape.DisplayLayer = _displayLayer++; // last draw call -> last rendering (= highest display layer)
-            shape.Layer = _renderLayers[Layer.Triangles];
+            shape.DisplayLayer = _displayLayer++;
+            shape.Visible = true;
+
+            _renderNodes.Add(renderObjectIndex, shape);
+
+            return renderObjectIndex;
+        }
+
+        public int FillPolygon(Color color, params Point[] points)
+        {
+            int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
+            var shape = Shape.CreatePolygon(this, _renderDimensionReference, points);
+
+            shape.Color = color;
+            shape.DisplayLayer = _displayLayer++;
             shape.Visible = true;
 
             _renderNodes.Add(renderObjectIndex, shape);

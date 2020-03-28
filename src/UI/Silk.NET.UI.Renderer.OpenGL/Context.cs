@@ -17,8 +17,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public Context(RenderDimensionReference dimensions)
         {
-            // TODO: maybe support earlier versions later?
-            // We need at least OpenGL 3.1 for instancing and shaders
+            // We need at least OpenGL 3.1 for instancing, shaders and primitive restart.
             if (State.OpenGLVersionMajor < 3 || (State.OpenGLVersionMajor == 3 && State.OpenGLVersionMinor < 1))
                 throw new NotSupportedException($"OpenGL version 3.1 is required for rendering. Your version is {State.OpenGLVersionMajor}.{State.OpenGLVersionMinor}.");
 

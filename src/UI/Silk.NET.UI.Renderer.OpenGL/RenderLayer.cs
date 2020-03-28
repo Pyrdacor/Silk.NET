@@ -5,26 +5,12 @@ using Silk.NET.OpenGL;
 namespace Silk.NET.UI.Renderer.OpenGL
 {
     public delegate Point PositionTransformation(Point position);
-    public delegate Size SizeTransformation(Size size);
-
-    internal enum Layer
-    {
-        None,
-        Controls, // controls (colors only)
-        Images, // images
-        Triangles, // colored triangle shapes / custom drawings
-        Ellipsis, // colored elliptic shapes / custom drawings
-        RoundRects, // colored rounded rect shapes / custom drawings
-    }
 
     internal class RenderLayer : IDisposable
     {
         private bool _disposed = false;
         private Texture _texture = null;
-        private readonly RenderBuffer _renderBuffer = null;
-        private readonly int _numVerticesPerNode = 0;
-
-        public Layer Layer { get; } = Layer.None;
+        private readonly PrimitiveRenderer _primitiveRenderer = null;
 
         public Color? ColorKey
         {
@@ -50,41 +36,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             set;
         } = null;
 
-        public SizeTransformation SizeTransformation
-        {
-            get;
-            set;
-        } = null;
-
         public float Z
         {
             get;
             set;
         } = 0.0f;
 
-
-        public RenderLayer(Layer layer, Texture texture, Color? colorKey = null, Color? colorOverlay = null)
+        public RenderLayer(Texture texture, int numVerticesPerNode, Color? colorKey = null, Color? colorOverlay = null)
         {
-            if (layer == Layer.None)
-                throw new ArgumentException($"Layer `{nameof(Layer.None)}` can not be used as a type of real render layers.");
-
-            _numVerticesPerNode = layer switch
-            {
-                Layer.Triangles => Shape.TriangleVertices,
-                Layer.Ellipsis => Shape.EllipseVertices,
-                Layer.RoundRects => Shape.RoundRectVertices,
-                _ => 6 // 2 triangles with 3 vertices each
-            };
-            _renderBuffer = new RenderBuffer(layer == Layer.Images,
-                _numVerticesPerNode,
-                layer switch
-                {
-                    Layer.Ellipsis => PrimitiveType.TriangleFan,
-                    Layer.RoundRects => PrimitiveType.TriangleFan,
-                    _ => PrimitiveType.Triangles
-                });
-
-            Layer = layer;
+            _primitiveRenderer = new PrimitiveRenderer(texture != null, numVerticesPerNode);
             _texture = texture;
             ColorKey = colorKey;
             ColorOverlay = colorOverlay;
@@ -97,11 +57,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (!Visible)
                 return;
 
-            if (Layer == Layer.Images)
+            if (_texture != null)
             {
-                if (_texture == null) // TODO: error?
-                    return;
-
                 var textureShader = TextureShader.Instance;
 
                 textureShader.UpdateMatrices(SupportZoom);
@@ -130,47 +87,42 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 colorShader.SetZ(Z);
             }
             
-            _renderBuffer.Render();
+            _primitiveRenderer.Render();
         }
 
-        public int GetDrawIndex(Sprite sprite)
+        public int GetDrawIndex(RenderNode renderNode)
         {
-            return _renderBuffer.GetDrawIndex(sprite, PositionTransformation, SizeTransformation);
+            return _primitiveRenderer.GetDrawIndex(renderNode, PositionTransformation);
         }
 
         public int GetDrawIndex(Shape shape)
         {
-            return _renderBuffer.GetDrawIndex(shape, PositionTransformation, SizeTransformation);
+            return _primitiveRenderer.GetDrawIndex(shape, PositionTransformation);
         }
 
         public void FreeDrawIndex(int index)
         {
-            _renderBuffer.FreeDrawIndex(index, _numVerticesPerNode);
+            _primitiveRenderer.FreeDrawIndex(index);
         }
 
-        public void UpdatePosition(int index, Sprite sprite)
+        public void UpdatePosition(int index, RenderNode renderNode)
         {
-            _renderBuffer.UpdatePosition(index, sprite, PositionTransformation, SizeTransformation);
-        }
-
-        public void UpdatePosition(int index, Shape shape)
-        {
-            _renderBuffer.UpdatePosition(index, shape, PositionTransformation, SizeTransformation);
+            _primitiveRenderer.UpdatePosition(index, renderNode, PositionTransformation);
         }
 
         public void UpdateTextureAtlasOffset(int index, Sprite sprite)
         {
-            _renderBuffer.UpdateTextureAtlasOffset(index, sprite);
+            _primitiveRenderer.UpdateTextureAtlasOffset(index, sprite);
         }
 
         public void UpdateDisplayLayer(int index, uint displayLayer)
         {
-            _renderBuffer.UpdateDisplayLayer(index, displayLayer, _numVerticesPerNode);
+            _primitiveRenderer.UpdateDisplayLayer(index, displayLayer);
         }
 
         public void UpdateColor(int index, Color color)
         {
-            _renderBuffer.UpdateColor(index, color, _numVerticesPerNode);
+            _primitiveRenderer.UpdateColor(index, color);
         }
         public void Dispose()
         {
@@ -183,7 +135,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             {
                 if (disposing)
                 {
-                    _renderBuffer?.Dispose();
+                    _primitiveRenderer?.Dispose();
                     _texture?.Dispose();
                     Visible = false;
                     _disposed = true;

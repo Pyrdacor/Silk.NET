@@ -1,5 +1,5 @@
-﻿using System.Drawing;
-using Silk.NET.OpenGL;
+﻿using System.Linq;
+using System.Drawing;
 
 namespace Silk.NET.UI.Renderer.OpenGL
 {
@@ -22,11 +22,31 @@ namespace Silk.NET.UI.Renderer.OpenGL
         private bool _notOnScreen = true;
         private readonly RenderDimensionReference _renderDimensionReference = null;
 
-        protected RenderNode(int width, int height, RenderDimensionReference renderDimensionReference)
+        protected RenderNode(RenderDimensionReference renderDimensionReference,
+            params Point[] vertexPositions)
         {
-            Width = width;
-            Height = height;
+            // Note: The order of assignments matters!
             _renderDimensionReference = renderDimensionReference;
+            var boundingRect = CalculateBoundingRect(vertexPositions);
+            Width = boundingRect.Width;
+            Height = boundingRect.Height;
+            X = boundingRect.X;
+            Y = boundingRect.Y;            
+            VertexPositions = vertexPositions;            
+        }
+
+        private static Rectangle CalculateBoundingRect(params Point[] points)
+        {
+            var xValues = points.Select(p => p.X);
+            var yValues = points.Select(p => p.Y);
+            int x = xValues.Min();
+            int y = yValues.Min();
+
+            return new Rectangle(
+                x, y,
+                xValues.Max() - x,
+                yValues.Max() - y
+            );
         }
 
         public bool Visible
@@ -86,7 +106,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
         }
 
-        public RenderLayer Layer
+        protected RenderLayer Layer
         {
             get => _layer;
             set
@@ -122,8 +142,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public int Height { get; private set; }
 
-        public abstract int VerticesPerNode { get; }
-        public abstract PrimitiveType PrimitiveType { get; }
+        public Point[] VertexPositions { get; private set; }
 
         public virtual void Resize(int width, int height)
         {
@@ -131,13 +150,25 @@ namespace Silk.NET.UI.Renderer.OpenGL
             Height = height;
         }
 
-        protected abstract void AddToLayer();
+        protected void AddToLayer()
+        {
+            _drawIndex = Layer.GetDrawIndex(this);
+        }
 
-        protected abstract void RemoveFromLayer();
+        protected void RemoveFromLayer()
+        {
+            if (_drawIndex.HasValue)
+            {
+                Layer.FreeDrawIndex(_drawIndex.Value);
+                _drawIndex = null;
+            }
+        }
 
-        protected abstract void UpdatePosition();
-
-        public abstract Point[] ProvideVertexPositions();
+        protected void UpdatePosition()
+        {
+            if (_drawIndex.HasValue)
+                Layer.UpdatePosition(_drawIndex.Value, this);
+        }
 
         protected void UpdateDisplayLayer()
         {

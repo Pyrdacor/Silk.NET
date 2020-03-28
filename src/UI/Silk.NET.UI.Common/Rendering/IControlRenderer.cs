@@ -18,7 +18,8 @@ namespace Silk.NET.UI
         int FillRectangle(int x, int y, int width, int height, Color color);
         int DrawRectangleLine(int x, int y, int width, int height, Color color, LineStyle lineStyle);
         int DrawImage(int x, int y, Image image, Color? colorOverlay = null);
-        int DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color);
+        int FillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color);
+        int FillPolygon(Color color, params Point[] points);
     }
 
     public interface IControlRendererFactory

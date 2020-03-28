@@ -18,11 +18,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public override VertexAttribPointerType Type => VertexAttribPointerType.UnsignedInt;
 
-        public override int Dimension => 6;
+        public override int Dimension { get; }
 
-        public IndexBuffer()
+        public IndexBuffer(int dimension)
         {
             _index = State.Gl.GenBuffer();
+            Dimension = dimension;
         }
 
         public override void Bind()
@@ -90,45 +91,25 @@ namespace Silk.NET.UI.Renderer.OpenGL
             return true;
         }
 
-        public void InsertQuad(int quadIndex)
+        public void InsertPrimitive(int offset, IndexType restartIndex)
         {
-            if (quadIndex >= int.MaxValue / 6)
+            int numIndices = Dimension;
+            int numVertices = numIndices - 1; // 1 for the restart index
+            int vertexOffset = (offset / numIndices) * numVertices;
+
+            if (offset > int.MaxValue - numIndices)
                 throw new Exceptions.InsufficientResourcesException("Too many polygons to render.");
 
-            int arrayIndex = quadIndex * 6; // 2 triangles with 3 vertices each
-            var vertexIndex = (IndexType)(quadIndex * 4); // 4 different vertices form a quad
-
-            if (_size <= arrayIndex + 6)
+            if (_size < offset + numIndices)
             {
-                _buffer = EnsureBufferSize(_buffer, arrayIndex + 6, out _);
-
-                _buffer[arrayIndex++] = vertexIndex + 0;
-                _buffer[arrayIndex++] = vertexIndex + 1;
-                _buffer[arrayIndex++] = vertexIndex + 2;
-                _buffer[arrayIndex++] = vertexIndex + 3;
-                _buffer[arrayIndex++] = vertexIndex + 0;
-                _buffer[arrayIndex++] = vertexIndex + 2;
-
-                _size = arrayIndex;
-                _changedSinceLastCreation = true;
-            }
-        }
-
-        public void InsertVertices(int offset, int numVertices)
-        {
-            if (offset > int.MaxValue - numVertices)
-                throw new Exceptions.InsufficientResourcesException("Too many polygons to render.");
-
-            if (_size < offset + numVertices)
-            {
-                _buffer = EnsureBufferSize(_buffer, (int)offset + numVertices, out _);
-
-                for (int i = 0; i < numVertices; ++i)
-                    _buffer[offset] = (IndexType)offset++;
-
+                _buffer = EnsureBufferSize(_buffer, (int)offset + numIndices, out _);
                 _size = _buffer.Length;
                 _changedSinceLastCreation = true;
             }
+
+            for (int i = 0; i < numVertices; ++i)
+                _buffer[offset++] = (IndexType)vertexOffset++;
+            _buffer[offset++] = restartIndex;
         }
 
         public override void Dispose()
