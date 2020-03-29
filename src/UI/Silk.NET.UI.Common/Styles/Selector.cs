@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Silk.NET.UI
 {
+    // TODO: do we still need this since SublevelSelector is there? maybe with string-format paths?
     public class SelectorPathNode
     {
         public SelectorPathNode Prev = null;
@@ -58,11 +59,17 @@ namespace Silk.NET.UI
 
         public static bool operator ==(Selector lhs, Selector rhs)
         {
+            if (Object.ReferenceEquals(lhs, null))
+                return Object.ReferenceEquals(rhs, null);
+
             return lhs.Equals(rhs);
         }
 
         public static bool operator !=(Selector lhs, Selector rhs)
         {
+            if (Object.ReferenceEquals(lhs, null))
+                return !Object.ReferenceEquals(rhs, null);
+
             return !(lhs == rhs);
         }
     }
@@ -88,6 +95,13 @@ namespace Silk.NET.UI
         {
             return new NegateSelector(selector);
         }
+
+        public static Selector Child(this Selector selector, Selector childSelector)
+        {
+            return new SublevelSelector(selector, childSelector);
+        }
+
+        // TODO: ancestor, etc
 
         public static Selector When(this Selector selector, bool value)
         {

@@ -9,7 +9,7 @@ namespace Silk.NET.UI
         private IControlRenderer _renderer;
         private List<int> _lastRenderObjects;
         private readonly List<int> _currentRenderObjects = new List<int>();
-        public bool ForceRedraw { get; set; } = false;
+        internal bool ForceRedraw { get; set; } = false;
 
         internal ControlRenderer(IControlRenderer renderer)
         {

@@ -1,7 +1,9 @@
 using System.Drawing;
-using System;
+
 namespace Silk.NET.UI.Controls
 {
+    using Input.Common;
+
     /// <summary>
     /// A clickable button.
     /// </summary>
@@ -21,6 +23,18 @@ namespace Silk.NET.UI.Controls
             // for now set some base dimensions
             Width = 100;
             Height = 60;
+
+            MouseDown += (_, e) =>
+            {
+                if (e.Button == MouseButton.Left)
+                    Pressed = true;
+            };
+            MouseUp += (_, e) =>
+            {
+                if (e.Button == MouseButton.Left)
+                    Pressed = false;
+            };
+            _pressed.InternalValueChanged += Invalidate;
         }
 
         protected override void OnRender(RenderEventArgs args)
@@ -32,22 +46,23 @@ namespace Silk.NET.UI.Controls
 
             if (Enabled)
             {
-                backgroundColor = (ColorValue)(Hovered ? Color.LightGray :  Color.Gray);
-                borderColor = (ColorValue)(Hovered ? Color.LightGray :  Color.Gray);
+                backgroundColor = (ColorValue)Color.Gray;
+
+                if (Hovered)
+                    backgroundColor = backgroundColor.Lighten(0.25f);
             }
             else
             {
                 backgroundColor = (ColorValue)Color.DarkGray;
-                borderColor = (ColorValue)Color.DarkGray;
             }
 
-            // TODO: The following 5 lines have to improve
-            OverrideStyle/*IfUndefined*/("border.size", 4);
-            OverrideStyle/*IfUndefined*/("border.color", Color.DarkGray);
-            OverrideStyle/*IfUndefined*/("border.linestyle", Pressed ? BorderLineStyle.Inset : BorderLineStyle.Outset);
-            OverrideStyle/*IfUndefined*/("background.color", backgroundColor);
+            borderColor = backgroundColor;
 
-            ControlRenderer.ForceRedraw = true;
+            // TODO: The following 4 lines have to improve
+            OverrideStyleIfUndefined("border.size", 4);
+            OverrideStyleIfUndefined("border.color", borderColor);
+            OverrideStyleIfUndefined("border.linestyle", Pressed ? BorderLineStyle.Inset : BorderLineStyle.Outset);
+            OverrideStyleIfUndefined("background.color", backgroundColor);
 
             // render with set styles
             base.OnRender(args);

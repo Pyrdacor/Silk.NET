@@ -41,8 +41,6 @@ namespace Silk.NET.UI.Controls
 
         protected override void OnRender(RenderEventArgs args)
         {
-            ControlRenderer.ForceRedraw = true; // TODO
-
             var borderSize = Style.Get<AllDirectionStyleValue<int>>("border.size", 0);
             var borderColor = Style.Get<AllDirectionStyleValue<ColorValue>>("border.color", "transparent");
             var borderStyle = Style.Get<AllDirectionStyleValue<BorderLineStyle>>("border.linestyle", BorderLineStyle.None);

@@ -9,8 +9,14 @@ namespace Silk.NET.UI
     public class ControlStyle
     {
         private static readonly Dictionary<string, IControlProperty> DefaultStyleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>
+        /// Contains properties set by component styling.
+        /// </summary>
         private readonly Dictionary<string, IControlProperty> _styleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
-        private readonly List<string> _alreadySetStyleProperties = new List<string>();
+        /// <summary>
+        /// Contains properties set by controls or user manually.
+        /// </summary>
+        private readonly Dictionary<string, IControlProperty> _manualStyleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
 
         static ControlStyle()
         {
@@ -123,6 +129,14 @@ namespace Silk.NET.UI
             }
         }
 
+        /// <summary>
+        /// Binds the style to the given variable.
+        /// This will always override any pre-existing styles
+        /// if a new value is provided by the observable.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="variable"></param>
+        /// <typeparam name="T"></typeparam>
         public void BindProperty<T>(string name, Observable<T> variable)
         {
             if (name == null)
@@ -134,21 +148,30 @@ namespace Silk.NET.UI
             if (variable == null)
                 throw new ArgumentNullException(nameof(variable));
 
-            _styleProperties[name].Bind<T>(variable);
+            _manualStyleProperties[name].Bind<T>(variable);
         }
 
-        internal void SetProperty<T>(string name, T value)
+        public void SetProperty<T>(string name, T value, bool allowStyleOverride = true)
         {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
+            if (_styleProperties.ContainsKey(name))
+            {
+                if (!allowStyleOverride)
+                    return;
+            }
+
             if (Object.ReferenceEquals(value, null)) // don't use "== null" here
             {
-                _styleProperties.Remove(name);
+                _manualStyleProperties.Remove(name);
                 return;
             }
 
-            if (_styleProperties.ContainsKey(name))
-                _styleProperties[name].SetValue<T>(value);
+            if (_manualStyleProperties.ContainsKey(name))
+                _manualStyleProperties[name].SetValue<T>(value);
             else
-                _styleProperties.Add(name, CreateProperty<T>(name, value));
+                _manualStyleProperties.Add(name, CreateProperty<T>(name, value));
         }
 
         /// <summary>
@@ -188,7 +211,7 @@ namespace Silk.NET.UI
         /// <returns>The value of the style property</returns>
         public T Get<T>(string name)
         {
-            return Get<T>(name, () => GetDefault<T>(name));
+            return Get<T>(name, () => GetDefault<T>(name), true);
         }
 
         /// <summary>
@@ -196,21 +219,75 @@ namespace Silk.NET.UI
         /// returning the internal default value in case the property
         /// is not set, the given defaultValue is returned.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="defaultValue"></param>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="name">Full qualified name of the style property</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <typeparam name="T">Type of the expected value</typeparam>
         /// <returns></returns>
         public T Get<T>(string name, T defaultValue)
         {
-            return Get<T>(name, () => defaultValue);
+            return Get<T>(name, () => defaultValue, true);
         }
 
-        private T Get<T>(string name, Func<T> defaultValueProvider)
+        /// <summary>
+        /// This is like <see cref="Get<T>(string)"/> but it
+        /// only considers template styling and no manual
+        /// set values.
+        /// </summary>
+        /// <param name="name">Full qualified name of the style property</param>
+        /// <typeparam name="T">Type of the expected value</typeparam>
+        /// <returns></returns>
+        public T GetFromStyle<T>(string name)
+        {
+            return Get<T>(name, () => GetDefault<T>(name), false);
+        }
+
+        /// <summary>
+        /// This is like <see cref="Get<T>(string, T)"/> but it
+        /// only considers template styling and no manual
+        /// set values.
+        /// </summary>
+        /// <param name="name">Full qualified name of the style property</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <typeparam name="T">Type of the expected value</typeparam>
+        /// <returns></returns>
+        public T GetFromStyle<T>(string name, T defaultValue)
+        {
+            return Get<T>(name, () => defaultValue, false);
+        }
+
+        private T Get<T>(string name, Func<T> defaultValueProvider, bool includeManualValues)
         {
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
             name = name.ToLower();
+
+            if (includeManualValues)
+            {
+                if (!_manualStyleProperties.ContainsKey(name))
+                {
+                    int dotPosition = name.IndexOf('.');
+
+                    if (dotPosition != -1)
+                    {
+                        try
+                        {
+                            return Get<T>(name.Remove(dotPosition, 1), () => throw new KeyNotFoundException(), true);
+                        }
+                        catch (KeyNotFoundException)
+                        {
+                            // ignore and check _styleProperties below
+                        }
+                    }
+                }
+                else
+                {
+                    var manualProperty = _manualStyleProperties[name];
+
+                    if (manualProperty.HasValue)
+                        return manualProperty.ConvertTo<T>();
+                }
+            }
 
             if (!_styleProperties.ContainsKey(name))
             {
@@ -222,7 +299,7 @@ namespace Silk.NET.UI
                 }
                 else
                 {
-                    return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider);
+                    return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider, includeManualValues);
                 }
             }
 
@@ -251,7 +328,7 @@ namespace Silk.NET.UI
 
         internal void StartStyling()
         {
-            _alreadySetStyleProperties.Clear();
+            _styleProperties.Clear();
         }
 
         internal bool SetStyleProperty(string name, object value)
@@ -261,12 +338,6 @@ namespace Silk.NET.UI
 
             if (!StylePropertyNames.Any(n => string.Compare(n, name, true) == 0))
                 throw new ArgumentException($"No style property with the name `{name}` exists.");
-
-            if (_alreadySetStyleProperties.Contains(name))
-                return false;
-
-            _alreadySetStyleProperties.Add(name);
-
             if (!_styleProperties.ContainsKey(name))
             {
                 var property = CreateProperty(name, DefaultStyleProperties[name].GetPropertyType(), value);
@@ -276,14 +347,9 @@ namespace Silk.NET.UI
                     _styleProperties.Add(name, property);
                     return true;
                 }
+            }
 
-                return false;
-            }
-            else
-            {
-                _styleProperties[name].SetValue(value);
-                return true;
-            }
+            return false;
         }
     }
 }

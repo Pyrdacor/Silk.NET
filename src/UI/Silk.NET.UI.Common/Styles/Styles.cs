@@ -4,17 +4,59 @@ using System.Collections.Generic;
 
 namespace Silk.NET.UI
 {
-    public abstract class Styles
+    public interface IStyles
     {
+        void Add(Selector selector, Style style);
+        void Add(Selector selector, Style style, Action<IStyles> subStyleBlock);
+    }
+
+    public abstract class Styles : IStyles
+    {
+        // TODO: should substyles look for child elements or for additional restrictions by default
+        // E.g. if a class is checked in substyle should we look at the parent control for this class
+        // (aka AND chaining) or should we look for children with this class (aka sublevel selector).
+        public class SubStyles : IStyles
+        {
+            private IStyles _parentStyles;
+            private Selector _parentSelector;
+
+            internal SubStyles(IStyles parentStyles, Selector parentSelector)
+            {
+                _parentStyles = parentStyles;
+                _parentSelector = parentSelector;
+            }
+
+            public void Add(Selector selector, Style style)
+            {
+                _parentStyles.Add(_parentSelector.Child(selector), style);
+            }
+
+            public void Add(Selector selector, Style style, Action<IStyles> subStyleBlock)
+            {
+                _parentStyles.Add(_parentSelector.Child(selector), style, subStyleBlock);
+            }
+        }
+
         private readonly Dictionary<Selector, Style> _styles = new Dictionary<Selector, Style>();
 
-        protected void Add(Selector selector, Style style)
+        public void Add(Selector selector, Style style)
         {
             // styles that are set later with the same selector will override previous styles
             if (_styles.ContainsKey(selector))
                 _styles[selector] = MergeStyles(_styles[selector], style);
             else
                 _styles[selector] = style;
+        }
+
+        public void Add(Selector selector, Style style, Action<IStyles> subStyleBlock)
+        {
+            // styles that are set later with the same selector will override previous styles
+            if (_styles.ContainsKey(selector))
+                _styles[selector] = MergeStyles(_styles[selector], style);
+            else
+                _styles[selector] = style;
+
+            subStyleBlock?.Invoke(new SubStyles(this, selector));
         }
 
         private Style MergeStyles(Style oldStyle, Style newStyle)
@@ -70,8 +112,9 @@ namespace Silk.NET.UI
                 .Where(result => result.Value != null);
         }
 
-        internal void Apply(Component component)
+        internal bool Apply(Component component)
         {
+            bool stylesApplied = false;
             var styleList = _styles.ToList();
             styleList.Sort(new StyleComparer()); // sort by selector priority
             var controlStylesInitialized = new List<Control>();
@@ -91,9 +134,12 @@ namespace Silk.NET.UI
                     foreach (var field in EnumerateFields(style.Value))
                     {
                         control.Style.SetStyleProperty(field.Key, field.Value);
+                        stylesApplied = true;
                     }
                 }
             }
+
+            return stylesApplied;
         }
 
         private class StyleComparer : IComparer<KeyValuePair<Selector, Style>>

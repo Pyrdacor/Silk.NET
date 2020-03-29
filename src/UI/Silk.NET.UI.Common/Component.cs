@@ -52,7 +52,9 @@ namespace Silk.NET.UI
         internal override void CheckStyleChanges()
         {
             Parent?.CheckStyleChanges();
-            _styles.Apply(this);
+            
+            if (_styles.Apply(this))
+                Invalidate();
         }
 
         internal static Component Create(Type type, string id, bool root)

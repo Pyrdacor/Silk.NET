@@ -369,10 +369,10 @@ namespace Silk.NET.UI
             // TODO
             OnInit();
 
-            _visible.ValueChanged += OnVisibilityChanged;
-            _enabled.ValueChanged += OnEnabledChanged;
-            _focused.ValueChanged += OnFocusedChanged;
-            _hovered.ValueChanged += OnHoveredChanged;
+            _visible.InternalValueChanged += OnVisibilityChanged;
+            _enabled.InternalValueChanged += OnEnabledChanged;
+            _focused.InternalValueChanged += OnFocusedChanged;
+            _hovered.InternalValueChanged += OnHoveredChanged;
 
             OnAfterContentInit();
 
@@ -394,11 +394,29 @@ namespace Silk.NET.UI
 
         }
 
+        public void Invalidate()
+        {
+            foreach (var child in InternalChildren)
+                child.Invalidate();
+
+            ControlRenderer.ForceRedraw = true;
+        }
+
         internal void RenderControl()
         {
             var args = new RenderEventArgs(ControlRenderer);
             OnRender(args);
             Render?.Invoke(this, args);
+
+            ResetInvalidation();
+        }
+
+        private void ResetInvalidation()
+        {
+            foreach (var child in InternalChildren)
+                child.ResetInvalidation();
+
+            ControlRenderer.ForceRedraw = false;
         }
 
         internal abstract void CheckStyleChanges();
@@ -413,7 +431,7 @@ namespace Silk.NET.UI
                 return;
             }
 
-            Style.SetProperty(name, value);
+            Style.SetProperty(name, value, true);
         }
 
         protected void OverrideStyleIfUndefined<T>(string name, T value)
@@ -426,7 +444,7 @@ namespace Silk.NET.UI
                 return;
             }
 
-            Style.SetProperty(name, Style.Get<T>(name, value));
+            Style.SetProperty(name, Style.GetFromStyle<T>(name, value), false);
         }
 
         private static void DrawSetBorder(ref int? renderRef, ControlRenderer renderer, StlyeDirection direction,
@@ -494,7 +512,7 @@ namespace Silk.NET.UI
             {
                 StlyeDirection.Top => rectangle.Y,
                 StlyeDirection.Bottom => rectangle.Y + rectangle.Height - lineSize,
-                _ => lineSize
+                _ => rectangle.Y + lineSize
             };
             int width = (int)direction % 2 == 0 ? rectangle.Width : lineSize;
             int height = (int)direction % 2 == 0 ? lineSize : rectangle.Height - 2 * lineSize;

@@ -9,11 +9,13 @@ namespace Silk.NET.UI
         private static readonly Condition TrueCondition = (control, path) => true;
 
         internal override int Priority { get; }
+        private readonly Selector _parentSelector;
         private Func<Control, SelectorPathNode, bool> _condition = null;
 
         public ConditionalSelector(Selector parentSelector, Func<Control, bool> condition)
         {
             Priority = parentSelector.Priority + 1;
+            _parentSelector = parentSelector;
             _condition = condition == null ? TrueCondition : (control, path) => condition(control);
         }
 
@@ -25,7 +27,7 @@ namespace Silk.NET.UI
 
         protected override bool Match(Control control, SelectorPathNode path)
         {
-            return _condition(control, path);
+            return _parentSelector.MatchControl(control, path) && _condition(control, path);
         }
 
         public override bool Equals(Selector other)

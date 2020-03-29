@@ -18,23 +18,32 @@ namespace Silk.NET.UI.Test
     {
         public MyStyles()
         {
-            /*Add(Selector.ForId("foo"), new Style()
+            Add(Selector.ForId("foo"), new Style()
             {
                 Background = new BackgroundStyle {
                     Color = "yellow"
                 },
                 BorderColor = "black"
-            });*/
+            }, (subStyles) => {
+                // substyles
+                subStyles.Add(Selector.ForClass("bar"), new Style()
+                {
+                    BorderSize = 8
+                });
+            });
             Add(Selector.ForType(typeof(Panel)), new Style()
             {
                 BackgroundColor = Color.Beige,
                 BorderSize = 1,
-                BorderColor = "black"
+                BorderColor = "black",
+                BorderLineStyle = BorderLineStyle.Solid
             });
             Add(Selector.ForType(typeof(Panel)).WhenHovered(), new Style()
             {
                 BackgroundColor = Color.Red,
-                BorderSize = 2,
+                BorderSize = 12,
+                BorderColor = "orange",
+                BorderLineStyle = BorderLineStyle.Inset
             });
         }
     }
