@@ -49,6 +49,12 @@ namespace Silk.NET.UI
             // TODO remove from renderer
         }
 
+        internal override void CheckStyleChanges()
+        {
+            Parent?.CheckStyleChanges();
+            _styles.Apply(this);
+        }
+
         internal static Component Create(Type type, string id, bool root)
         {
             var templateAttribute = type.GetCustomAttribute(typeof(TemplateAttribute), false);

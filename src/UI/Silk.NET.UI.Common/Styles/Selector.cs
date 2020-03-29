@@ -66,4 +66,87 @@ namespace Silk.NET.UI
             return !(lhs == rhs);
         }
     }
+
+    public static class SelectorExtensions
+    {
+        public static Selector And(this Selector selector, Selector other)
+        {
+            return new ChainSelector(selector, other, ChainOperator.And);
+        }
+
+        public static Selector Or(this Selector selector, Selector other)
+        {
+            return new ChainSelector(selector, other, ChainOperator.Or);
+        }
+
+        public static Selector Xor(this Selector selector, Selector other)
+        {
+            return new ChainSelector(selector, other, ChainOperator.Xor);
+        }
+
+        public static Selector Not(this Selector selector, Selector other)
+        {
+            return new NegateSelector(selector);
+        }
+
+        public static Selector When(this Selector selector, bool value)
+        {
+            return When(selector, (control) => value);
+        }
+
+        public static Selector When(this Selector selector, Func<Control, bool> condition)
+        {
+            return new ConditionalSelector(selector, condition);
+        }
+
+        public static Selector When(this Selector selector, Func<Control, SelectorPathNode, bool> condition)
+        {
+            return new ConditionalSelector(selector, condition);
+        }
+
+        public static Selector WhenEnabled(this Selector selector)
+        {
+            return WhenEnabledIs(selector, true);
+        }
+
+        public static Selector WhenDisabled(this Selector selector)
+        {
+            return WhenEnabledIs(selector, false);
+        }
+
+        public static Selector WhenEnabledIs(this Selector selector, bool value)
+        {
+            return StateSelector.CreateEnabledStateSelector(selector, value);
+        }
+
+        public static Selector WhenFocused(this Selector selector)
+        {
+            return WhenFocusedIs(selector, true);
+        }
+
+        public static Selector WhenNotFocused(this Selector selector)
+        {
+            return WhenFocusedIs(selector, false);
+        }
+
+        public static Selector WhenFocusedIs(this Selector selector, bool value)
+        {
+            return StateSelector.CreateFocusedStateSelector(selector, value);
+        }
+
+        public static Selector WhenHovered(this Selector selector)
+        {
+            return WhenHoveredIs(selector, true);
+        }
+
+        public static Selector WhenNotHovered(this Selector selector)
+        {
+            return WhenHoveredIs(selector, false);
+        }
+
+        public static Selector WhenHoveredIs(this Selector selector, bool value)
+        {
+            return StateSelector.CreateHoveredStateSelector(selector, value);
+        }
+    }
 }

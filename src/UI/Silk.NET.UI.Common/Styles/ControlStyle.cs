@@ -10,6 +10,7 @@ namespace Silk.NET.UI
     {
         private static readonly Dictionary<string, IControlProperty> DefaultStyleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IControlProperty> _styleProperties = new Dictionary<string, IControlProperty>(StringComparer.OrdinalIgnoreCase);
+        private readonly List<string> _alreadySetStyleProperties = new List<string>();
 
         static ControlStyle()
         {
@@ -248,6 +249,11 @@ namespace Silk.NET.UI
             return property.HasValue ? property.ConvertTo<T>() : default(T);
         }
 
+        internal void StartStyling()
+        {
+            _alreadySetStyleProperties.Clear();
+        }
+
         internal bool SetStyleProperty(string name, object value)
         {
             if (name == null)
@@ -255,6 +261,11 @@ namespace Silk.NET.UI
 
             if (!StylePropertyNames.Any(n => string.Compare(n, name, true) == 0))
                 throw new ArgumentException($"No style property with the name `{name}` exists.");
+
+            if (_alreadySetStyleProperties.Contains(name))
+                return false;
+
+            _alreadySetStyleProperties.Add(name);
 
             if (!_styleProperties.ContainsKey(name))
             {
@@ -265,9 +276,14 @@ namespace Silk.NET.UI
                     _styleProperties.Add(name, property);
                     return true;
                 }
-            }
 
-            return false;
+                return false;
+            }
+            else
+            {
+                _styleProperties[name].SetValue(value);
+                return true;
+            }
         }
     }
 }

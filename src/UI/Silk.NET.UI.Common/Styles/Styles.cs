@@ -74,6 +74,7 @@ namespace Silk.NET.UI
         {
             var styleList = _styles.ToList();
             styleList.Sort(new StyleComparer()); // sort by selector priority
+            var controlStylesInitialized = new List<Control>();
 
             foreach (var style in styleList)
             {
@@ -81,6 +82,12 @@ namespace Silk.NET.UI
 
                 foreach (var control in matchingControls)
                 {
+                    if (!controlStylesInitialized.Contains(control))
+                    {
+                        controlStylesInitialized.Add(control);
+                        control.Style.StartStyling();
+                    }
+
                     foreach (var field in EnumerateFields(style.Value))
                     {
                         control.Style.SetStyleProperty(field.Key, field.Value);

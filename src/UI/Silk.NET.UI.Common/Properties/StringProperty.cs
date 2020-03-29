@@ -35,9 +35,9 @@ namespace Silk.NET.UI
                 throw new InvalidCastException();
         }
 
-        internal override void SetValue<U>(U value)
+        internal override void SetValue(object value)
         {
-            Value = value.ToString();
+            Value = Object.ReferenceEquals(value, null) ? null : value.ToString();
         }
 
         internal override bool IsEqual<U>(U value)

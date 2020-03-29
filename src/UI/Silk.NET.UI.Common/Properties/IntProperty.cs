@@ -43,18 +43,24 @@ namespace Silk.NET.UI
                 throw new InvalidCastException();
         }
 
-        internal override void SetValue<U>(U value)
+        internal override void SetValue(object value)
         {
-            var type = typeof(U);
+            if (Object.ReferenceEquals(value, null))
+            {
+                Value = null;
+                return;
+            }
+            
+            var type = value.GetType();
 
             if (type == typeof(int))
-                Value = (int)(object)value;
+                Value = (int)value;
             else if (type == typeof(int?))
-                Value = (int?)(object)value;
+                Value = (int?)value;
             else if (type == typeof(string))
-                Value = int.Parse((string)(object)value);
+                Value = int.Parse((string)value);
             else if (type == typeof(bool))
-                Value = (bool)(object)value ? 1 : 0;
+                Value = (bool)value ? 1 : 0;
             else
                 throw new InvalidCastException();
         }

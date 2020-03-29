@@ -216,22 +216,25 @@ namespace Silk.NET.UI
         public event KeyEventHandler KeyUp;
 
 
-        private void OnParentChanged()
+        internal virtual void OnParentChanged()
         {
             ParentChanged?.Invoke(this, new PropagatedEventArgs());
+            CheckStyleChanges();
         }
 
-        private void OnVisibilityChanged()
+        internal virtual void OnVisibilityChanged()
         {
             VisibilityChanged?.Invoke(this, new PropagatedEventArgs());
+            CheckStyleChanges();
         }
 
-        private void OnEnabledChanged()
+        internal virtual void OnEnabledChanged()
         {
             EnabledChanged?.Invoke(this, new PropagatedEventArgs());
+            CheckStyleChanges();
         }
 
-        private void OnFocusedChanged()
+        internal virtual void OnFocusedChanged()
         {
             FocusedChanged?.Invoke(this, new PropagatedEventArgs());
 
@@ -239,9 +242,11 @@ namespace Silk.NET.UI
                 GainFocus?.Invoke(this, new PropagatedEventArgs());
             else
                 LostFocus?.Invoke(this, new PropagatedEventArgs());
+
+            CheckStyleChanges();
         }
 
-        private void OnHoveredChanged()
+        internal virtual void OnHoveredChanged()
         {
             HoveredChanged?.Invoke(this, new PropagatedEventArgs());
 
@@ -249,6 +254,8 @@ namespace Silk.NET.UI
                 Enter?.Invoke(this, new PropagatedEventArgs());
             else
                 Leave?.Invoke(this, new PropagatedEventArgs());
+
+            CheckStyleChanges();
         }
 
         internal void OnMouseMove(MouseMoveEventArgs args)
@@ -393,6 +400,8 @@ namespace Silk.NET.UI
             OnRender(args);
             Render?.Invoke(this, args);
         }
+
+        internal abstract void CheckStyleChanges();
 
         protected void OverrideStyle<T>(string name, T value)
         {

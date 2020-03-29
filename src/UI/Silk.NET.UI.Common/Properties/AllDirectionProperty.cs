@@ -116,22 +116,29 @@ namespace Silk.NET.UI
                 throw new InvalidCastException();
         }
 
-        internal override void SetValue<U>(U value)
+        internal override void SetValue(object value)
         {
-            var type = typeof(U);
+            if (Object.ReferenceEquals(value, null))
+            {
+                Value = null;
+                return;
+            }
+
+            var type = value.GetType();
 
             if (Util.CheckGenericType(type, typeof(AllDirectionStyleValue<>)) && type.GenericTypeArguments[0] == typeof(T))
                 Value = (AllDirectionStyleValue<T>)(object)value;
-            else if (Util.CheckGenericType(type, typeof(Nullable<>)) && Util.CheckGenericType(type.GenericTypeArguments[0], typeof(AllDirectionStyleValue<>)) &&
+            else if (Util.CheckGenericType(type, typeof(Nullable<>)) &&
+                Util.CheckGenericType(type.GenericTypeArguments[0], typeof(AllDirectionStyleValue<>)) &&
                 type.GenericTypeArguments[0].GenericTypeArguments[0] == typeof(T))
-                Value = (AllDirectionStyleValue<T>?)(object)value;
+                Value = (AllDirectionStyleValue<T>?)value;
             else if (type == typeof(string))
-                Value = (AllDirectionStyleValue<T>)(string)(object)value;
+                Value = (AllDirectionStyleValue<T>)(string)value;
             else if (type == typeof(T))
-                Value = (AllDirectionStyleValue<T>)(T)(object)value;
+                Value = (AllDirectionStyleValue<T>)(T)value;
             else if (Util.CheckGenericType(type, typeof(Tuple<>)))
                 // TODO?
-                Value = (AllDirectionStyleValue<T>)(object)value;
+                Value = (AllDirectionStyleValue<T>)value;
             else
                 throw new InvalidCastException();
         }

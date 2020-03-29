@@ -31,6 +31,11 @@ namespace Silk.NET.UI.Test
                 BorderSize = 1,
                 BorderColor = "black"
             });
+            Add(Selector.ForType(typeof(Panel)).WhenHovered(), new Style()
+            {
+                BackgroundColor = Color.Red,
+                BorderSize = 2,
+            });
         }
     }
 

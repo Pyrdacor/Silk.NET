@@ -1,5 +1,9 @@
 namespace Silk.NET.UI.Controls
 {
+    // The panel is the base class for all
+    // basic non-component controls like
+    // buttons, inputs, labels and so on.
+
     /// <summary>
     /// Most basic control which is only
     /// a clickable surface with a background.
@@ -20,17 +24,25 @@ namespace Silk.NET.UI.Controls
         internal override void DestroyView()
         {
             if (_backgroundRef.HasValue)
+            {
                 ControlRenderer.RemoveRenderObject(_backgroundRef.Value);
+                _backgroundRef = null;
+            }
 
             for (int i = 0; i < _borderRefs.Length; ++i)
             {
                 if (_borderRefs[i].HasValue)
+                {
                     ControlRenderer.RemoveRenderObject(_borderRefs[i].Value);
+                    _borderRefs[i] = null;
+                }
             }
         }
 
         protected override void OnRender(RenderEventArgs args)
         {
+            ControlRenderer.ForceRedraw = true; // TODO
+
             var borderSize = Style.Get<AllDirectionStyleValue<int>>("border.size", 0);
             var borderColor = Style.Get<AllDirectionStyleValue<ColorValue>>("border.color", "transparent");
             var borderStyle = Style.Get<AllDirectionStyleValue<BorderLineStyle>>("border.linestyle", BorderLineStyle.None);
@@ -52,6 +64,11 @@ namespace Silk.NET.UI.Controls
 
             // render child controls
             base.OnRender(args);
+        }
+
+        internal override void CheckStyleChanges()
+        {
+            Parent?.CheckStyleChanges();
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Silk.NET.UI
         bool IsEqual<U>(U value);
         Type GetPropertyType();
         object GetValue();
+        void SetValue(object value);
     }
 
     internal class DisableChangeEventContext : IDisposable
@@ -75,6 +76,11 @@ namespace Silk.NET.UI
             SetValue(value);
         }
 
+        void IControlProperty.SetValue(object value)
+        {
+            SetValue(value);
+        }
+
         bool IControlProperty.IsEqual<U>(U value)
         {
             return IsEqual<U>(value);
@@ -102,7 +108,12 @@ namespace Silk.NET.UI
             }, error => throw error); // TODO: how to handle errors here
         }
 
-        internal abstract void SetValue<U>(U value);
+        internal void SetValue<U>(U value)
+        {
+            SetValue((object)value);
+        }
+
+        internal abstract void SetValue(object value);
         
         internal abstract bool IsEqual<U>(U value);
     }

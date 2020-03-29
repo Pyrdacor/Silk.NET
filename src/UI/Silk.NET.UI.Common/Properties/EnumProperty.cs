@@ -45,17 +45,23 @@ namespace Silk.NET.UI
                 throw new InvalidCastException();
         }
 
-        internal override void SetValue<U>(U value)
+        internal override void SetValue(object value)
         {
-            var type = typeof(U);
+            if (Object.ReferenceEquals(value, null))
+            {
+                Value = null;
+                return;
+            }
+            
+            var type = value.GetType();
 
             if (type == _enumType)
                 Value = (int)(object)value;
             else if (Util.CheckGenericType(type, typeof(Nullable<>)) && type.GenericTypeArguments[0] == _enumType)
-                Value = (int?)(object)value;
+                Value = (int?)value;
             else if (type == typeof(string))
             {
-                string stringValue = (string)(object)value;
+                string stringValue = (string)value;
 
                 try
                 {
@@ -67,9 +73,9 @@ namespace Silk.NET.UI
                 }
             }
             else if (type == typeof(int))
-                Value = (int)(object)value;
+                Value = (int)value;
             else if (type == typeof(int?))
-                Value = (int?)(object)value;
+                Value = (int?)value;
             else
                 throw new InvalidCastException();
         }
