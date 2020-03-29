@@ -9,6 +9,7 @@ namespace Silk.NET.UI
         private IControlRenderer _renderer;
         private List<int> _lastRenderObjects;
         private readonly List<int> _currentRenderObjects = new List<int>();
+        public bool ForceRedraw { get; set; } = false;
 
         internal ControlRenderer(IControlRenderer renderer)
         {
@@ -43,12 +44,26 @@ namespace Silk.NET.UI
             }
             else
             {
-                renderObjectIndex = reference.Value;
+                if (ForceRedraw)
+                {
+                    _renderer.RemoveRenderObject(reference.Value);
+                    renderObjectIndex = drawActionWrapper();
+                    _currentRenderObjects.Add(renderObjectIndex);
+                    _lastRenderObjects.Remove(reference.Value);
+                    return renderObjectIndex;
+                }
+                else
+                    renderObjectIndex = reference.Value;
             }
 
             _currentRenderObjects.Add(renderObjectIndex);
             _lastRenderObjects.Remove(renderObjectIndex);
             return renderObjectIndex;
+        }
+
+        public void RemoveRenderObject(int renderObjectIndex)
+        {
+            _renderer.RemoveRenderObject(renderObjectIndex);
         }
 
         public int DrawRectangle(int? reference, int x, int y, int width, int height, Color color, int lineSize)

@@ -44,9 +44,9 @@ namespace Silk.NET.UI
             _styles.Apply(this);
         }
 
-        internal void DestroyView()
+        internal override void DestroyView()
         {
-            // TODO ?
+            // TODO remove from renderer
         }
 
         internal static Component Create(Type type, string id, bool root)

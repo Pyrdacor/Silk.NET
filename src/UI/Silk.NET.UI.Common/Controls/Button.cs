@@ -41,10 +41,13 @@ namespace Silk.NET.UI.Controls
                 borderColor = (ColorValue)Color.DarkGray;
             }
 
-            OverrideStyleIfUndefined("border.size", 4);
-            OverrideStyleIfUndefined("border.color", Color.DarkGray);
-            OverrideStyleIfUndefined("border.linestyle", Pressed ? BorderLineStyle.Inset : BorderLineStyle.Outset);
-            OverrideStyleIfUndefined("background.color", backgroundColor);
+            // TODO: The following 5 lines have to improve
+            OverrideStyle/*IfUndefined*/("border.size", 4);
+            OverrideStyle/*IfUndefined*/("border.color", Color.DarkGray);
+            OverrideStyle/*IfUndefined*/("border.linestyle", Pressed ? BorderLineStyle.Inset : BorderLineStyle.Outset);
+            OverrideStyle/*IfUndefined*/("background.color", backgroundColor);
+
+            ControlRenderer.ForceRedraw = true;
 
             // render with set styles
             base.OnRender(args);

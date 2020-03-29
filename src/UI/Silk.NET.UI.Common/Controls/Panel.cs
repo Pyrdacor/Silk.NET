@@ -17,6 +17,18 @@ namespace Silk.NET.UI.Controls
             Height = 100;
         }
 
+        internal override void DestroyView()
+        {
+            if (_backgroundRef.HasValue)
+                ControlRenderer.RemoveRenderObject(_backgroundRef.Value);
+
+            for (int i = 0; i < _borderRefs.Length; ++i)
+            {
+                if (_borderRefs[i].HasValue)
+                    ControlRenderer.RemoveRenderObject(_borderRefs[i].Value);
+            }
+        }
+
         protected override void OnRender(RenderEventArgs args)
         {
             var borderSize = Style.Get<AllDirectionStyleValue<int>>("border.size", 0);

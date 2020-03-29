@@ -59,6 +59,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             if (_renderNodes.ContainsKey(renderObjectIndex))
             {
                 _renderNodes[renderObjectIndex].Delete();
+                _renderNodes.Remove(renderObjectIndex);
                 _renderNodeIndexPool.UnassignIndex(renderObjectIndex);
             }
         }

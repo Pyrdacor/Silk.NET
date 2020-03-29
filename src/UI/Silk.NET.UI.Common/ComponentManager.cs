@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Silk.NET.Windowing.Common;
+using Silk.NET.Input;
 
 namespace Silk.NET.UI
 {
@@ -10,7 +11,8 @@ namespace Silk.NET.UI
         private static readonly Dictionary<string, List<string>> componentTypesByName = new Dictionary<string, List<string>>();
         private static readonly Dictionary<string, Type> componentTypesByFullName = new Dictionary<string, Type>();
 
-        public static void Run(Type rootComponentType, Windowing.Common.IView view, IControlRendererFactory controlRendererFactory)
+        public static void Run(Type rootComponentType, Windowing.Common.IView view,
+            IControlRendererFactory controlRendererFactory)
         {
             if (!rootComponentType.IsSubclassOf(typeof(RootComponent)))
                 throw new ArgumentException($"The given type is not a subclass of `{nameof(RootComponent)}`.");
@@ -32,6 +34,7 @@ namespace Silk.NET.UI
             {
                 var controlRenderer = controlRendererFactory.CreateControlRenderer(view);
                 rootComponent.SetControlRenderer(controlRenderer);
+                rootComponent.SetInputEventManager(new InputEventManager(view.CreateInput()));
 
                 // init root component and its view
                 rootComponent.InitControl();

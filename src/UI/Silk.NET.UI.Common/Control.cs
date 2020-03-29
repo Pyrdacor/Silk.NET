@@ -4,12 +4,18 @@ using System.Drawing;
 
 namespace Silk.NET.UI
 {
+    using Input.Common;
+
     public abstract class Control
     {
         private Component _parent;
         internal virtual ControlRenderer ControlRenderer
         {
             get => Parent != null ? Parent.ControlRenderer : null;
+        }
+        internal virtual InputEventManager InputEventManager
+        {
+            get => Parent != null ? Parent.InputEventManager : null;
         }
         private readonly ControlStyle style = new ControlStyle();
         internal protected ControlStyle Style => style;
@@ -110,6 +116,9 @@ namespace Silk.NET.UI
             get => _height.Value ?? 0;
             set => _height.Value = value;
         }
+        /// <summary>
+        /// Location relative to the parent control.
+        /// </summary>
         public Point Location
         {
             get => new Point(X, Y);
@@ -125,6 +134,13 @@ namespace Silk.NET.UI
                 if (oldX != X || oldY != Y)
                     OnPositionChanged();
             }
+        }
+        /// <summary>
+        /// Absolute location which is relative to the main view.
+        /// </summary>
+        public Point AbsoluteLocation
+        {
+            get => Parent == null ? Location : Parent.AbsoluteLocation.Add(Location);
         }
         public Size Size
         {
@@ -145,7 +161,6 @@ namespace Silk.NET.UI
         /// <summary>
         /// Rectangular area relative to the parent control.
         /// </summary>
-        /// <value></value>
         public Rectangle ClientRectangle
         {
             get => new Rectangle(Location, Size);
@@ -154,6 +169,13 @@ namespace Silk.NET.UI
                 Location = value.Location;
                 Size = value.Size;
             }
+        }
+        /// <summary>
+        /// Absolute rectangle which is positioned relative to the main view.
+        /// </summary>
+        public Rectangle AbsoluteRectangle
+        {
+            get => new Rectangle(AbsoluteLocation, Size);
         }
 
         protected void OnPositionChanged()
@@ -174,8 +196,103 @@ namespace Silk.NET.UI
         #endregion
 
 
+        #region Events
+
+        public event PropagatedEventHandler ParentChanged;
+        public event PropagatedEventHandler VisibilityChanged;
+        public event PropagatedEventHandler EnabledChanged;
+        public event PropagatedEventHandler FocusedChanged;
+        public event PropagatedEventHandler GainFocus;
+        public event PropagatedEventHandler LostFocus;
+        public event PropagatedEventHandler HoveredChanged;
+        public event PropagatedEventHandler Enter;
+        public event PropagatedEventHandler Leave;
+        public event MouseMoveEventHandler MouseMove;
+        public event MouseButtonEventHandler MouseDown;
+        public event MouseButtonEventHandler MouseUp;
+        public event MouseButtonEventHandler MouseClick;
+        public event MouseButtonEventHandler MouseDoubleClick;
+        public event KeyEventHandler KeyDown;
+        public event KeyEventHandler KeyUp;
+
+
+        private void OnParentChanged()
+        {
+            ParentChanged?.Invoke(this, new PropagatedEventArgs());
+        }
+
+        private void OnVisibilityChanged()
+        {
+            VisibilityChanged?.Invoke(this, new PropagatedEventArgs());
+        }
+
+        private void OnEnabledChanged()
+        {
+            EnabledChanged?.Invoke(this, new PropagatedEventArgs());
+        }
+
+        private void OnFocusedChanged()
+        {
+            FocusedChanged?.Invoke(this, new PropagatedEventArgs());
+
+            if (Focused)
+                GainFocus?.Invoke(this, new PropagatedEventArgs());
+            else
+                LostFocus?.Invoke(this, new PropagatedEventArgs());
+        }
+
+        private void OnHoveredChanged()
+        {
+            HoveredChanged?.Invoke(this, new PropagatedEventArgs());
+
+            if (Hovered)
+                Enter?.Invoke(this, new PropagatedEventArgs());
+            else
+                Leave?.Invoke(this, new PropagatedEventArgs());
+        }
+
+        internal void OnMouseMove(MouseMoveEventArgs args)
+        {
+            MouseMove?.Invoke(this, args);
+
+            Hovered = ClientRectangle.Contains(args.X, args.Y);
+        }
+
+        internal void OnMouseDown(MouseButtonEventArgs args)
+        {
+            MouseDown?.Invoke(this, args);
+        }
+
+        internal void OnMouseUp(MouseButtonEventArgs args)
+        {
+            MouseUp?.Invoke(this, args);
+        }
+
+        internal void OnMouseClick(MouseButtonEventArgs args)
+        {
+            MouseClick?.Invoke(this, args);
+        }
+
+        internal void OnMouseDoubleClick(MouseButtonEventArgs args)
+        {
+            MouseDoubleClick?.Invoke(this, args);
+        }
+
+        internal void OnKeyDown(KeyEventArgs args)
+        {
+            KeyDown?.Invoke(this, args);
+        }
+
+        internal void OnKeyUp(KeyEventArgs args)
+        {
+            KeyUp?.Invoke(this, args);
+        }
+
+        #endregion
+
+
         public string Id { get; internal set; }
-        public List<string> Classes { get; } = new List<string>(); // TODO: make it readonly?
+        public List<string> Classes { get; } = new List<string>();
         internal ControlList InternalChildren { get; }
         public Component Parent
         {
@@ -189,12 +306,7 @@ namespace Silk.NET.UI
                 }
             }
         }
-        public event EventHandler ParentChanged;
-        private void OnParentChanged()
-        {
-            ParentChanged?.Invoke(this, EventArgs.Empty);
-        }
-
+ 
         protected Control(string id)
         {
             Id = id;
@@ -212,8 +324,11 @@ namespace Silk.NET.UI
             _height.ValueChanged += OnSizeChanged;
         }
 
-        internal virtual void DestroyControl()
+        internal void DestroyControl()
         {
+            foreach (var child in InternalChildren)
+                child.DestroyControl();
+
             OnDestroy();
 
             if (Parent != null)
@@ -224,7 +339,9 @@ namespace Silk.NET.UI
             _width.ValueChanged -= OnSizeChanged;
             _height.ValueChanged -= OnSizeChanged;
 
-            // TODO: remove from renderer?
+            InputEventManager?.UnregisterControl(this);
+
+            DestroyView();
         }
 
         protected void RegisterControlProperty<T>(ControlProperty<T> property)
@@ -238,19 +355,34 @@ namespace Silk.NET.UI
                 child.OnRender(args);
         }
 
-        // TODO: the two following methods have to be called from the component manager
-
         internal void InitControl()
         {
+            InputEventManager?.RegisterControl(this);
+
             // TODO
             OnInit();
 
+            _visible.ValueChanged += OnVisibilityChanged;
+            _enabled.ValueChanged += OnEnabledChanged;
+            _focused.ValueChanged += OnFocusedChanged;
+            _hovered.ValueChanged += OnHoveredChanged;
+
             OnAfterContentInit();
+
             InitView();
+
+            foreach (var child in InternalChildren)
+                child.InitControl();
+
             OnAfterViewInit();
         }
 
         internal virtual void InitView()
+        {
+
+        }
+
+        internal virtual void DestroyView()
         {
 
         }
@@ -264,16 +396,22 @@ namespace Silk.NET.UI
 
         protected void OverrideStyle<T>(string name, T value)
         {
+            // AllDirectionStyleValue<ColorValue> will fail to convert from/to System.Drawing.Color
+            // so we will convert colors to a ColorValue here.
+            if (typeof(T) == typeof(System.Drawing.Color))
+            {
+                OverrideStyle(name, new ColorValue((Color)(object)value));
+                return;
+            }
+
             Style.SetProperty(name, value);
         }
 
         protected void OverrideStyleIfUndefined<T>(string name, T value)
         {
-            var type = typeof(T);
-
             // AllDirectionStyleValue<ColorValue> will fail to convert from/to System.Drawing.Color
             // so we will convert colors to a ColorValue here.
-            if (type == typeof(System.Drawing.Color))
+            if (typeof(T) == typeof(System.Drawing.Color))
             {
                 OverrideStyleIfUndefined(name, new ColorValue((Color)(object)value));
                 return;
