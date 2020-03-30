@@ -12,9 +12,6 @@ namespace Silk.NET.UI
 
     public abstract class Styles : IStyles
     {
-        // TODO: should substyles look for child elements or for additional restrictions by default
-        // E.g. if a class is checked in substyle should we look at the parent control for this class
-        // (aka AND chaining) or should we look for children with this class (aka sublevel selector).
         public class SubStyles : IStyles
         {
             private IStyles _parentStyles;
@@ -28,17 +25,26 @@ namespace Silk.NET.UI
 
             public void Add(Selector selector, Style style)
             {
-                _parentStyles.Add(_parentSelector.Child(selector), style);
+                _parentStyles.Add(_parentSelector.And(selector), style);
             }
 
             public void Add(Selector selector, Style style, Action<IStyles> subStyleBlock)
             {
-                _parentStyles.Add(_parentSelector.Child(selector), style, subStyleBlock);
+                _parentStyles.Add(_parentSelector.And(selector), style, subStyleBlock);
             }
         }
 
         private readonly Dictionary<Selector, Style> _styles = new Dictionary<Selector, Style>();
 
+        /// <summary>
+        /// Searches for controls that match the given selector and
+        /// then applies the given style to these controls.
+        /// 
+        /// The search is based on the current component as the
+        /// root or starting point.
+        /// </summary>
+        /// <param name="selector">Control selector</param>
+        /// <param name="style">Style to use for matched selections</param>
         public void Add(Selector selector, Style style)
         {
             // styles that are set later with the same selector will override previous styles
@@ -48,6 +54,37 @@ namespace Silk.NET.UI
                 _styles[selector] = style;
         }
 
+        /// <summary>
+        /// Like <see cref="Add(Selector, Style)"/> but inside the <paramref name="subStyleBlock"/>
+        /// additional styles can be added which then are restricted by the given
+        /// <paramref name="selector"/>.
+        /// 
+        /// Example:
+        /// 
+        /// Add(Selector.ForId("someId"), new Style()
+        /// {
+        ///     BorderColor = "black"
+        /// }, (subStyles) => {
+        ///     subStyles.Add(Selector.ForClass("someClass"), new Style()
+        ///     {
+        ///         BorderColor = "red"
+        ///     });
+        /// });
+        /// 
+        /// This is the same as:
+        /// 
+        /// Add(Selector.ForId("someId"), new Style()
+        /// {
+        ///     BorderColor = "black"
+        /// });
+        /// Add(Selector.ForId("someId").And(Selector.ForClass("someClass")), new Style()
+        /// {
+        ///     BorderColor = "black"
+        /// });
+        /// </summary>
+        /// <param name="selector">Main control selector</param>
+        /// <param name="style">Style to use for matched selections</param>
+        /// <param name="subStyleBlock">Action in which you can add substyles</param>
         public void Add(Selector selector, Style style, Action<IStyles> subStyleBlock)
         {
             // styles that are set later with the same selector will override previous styles
