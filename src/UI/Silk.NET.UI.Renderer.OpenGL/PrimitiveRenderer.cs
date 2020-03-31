@@ -9,18 +9,22 @@ namespace Silk.NET.UI.Renderer.OpenGL
         private bool _disposed = false;
         private bool _supportTextures = false;
         private int _numVerticesPerNode = 0;
+        private bool _supportBlur = false;
         private readonly VertexArrayObject _vertexArrayObject = null;
         private readonly PositionBuffer _positionBuffer = null;
+        private readonly PositionBuffer _sizeBuffer = null;
         private readonly PositionBuffer _textureAtlasOffsetBuffer = null;
         private readonly ColorBuffer _colorBuffer = null;
-        private readonly LayerBuffer _layerBuffer = null;
+        private readonly ValueBuffer _layerBuffer = null;
+        private readonly ValueBuffer _blurRadiusBuffer = null;
         private readonly IndexBuffer _indexBuffer = null;
         private const uint PrimitiveRestartIndex = uint.MaxValue;
 
-        public PrimitiveRenderer(bool supportTextures, int numVerticesPerNode)
+        public PrimitiveRenderer(bool supportTextures, int numVerticesPerNode, bool supportBlur)
         {
             _supportTextures = supportTextures;
             _numVerticesPerNode = numVerticesPerNode;
+            _supportBlur = supportBlur;
 
             if (supportTextures)
             {
@@ -28,25 +32,44 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
                 _textureAtlasOffsetBuffer = new PositionBuffer(false);
                 _vertexArrayObject.AddBuffer(TextureShader.DefaultTexCoordName, _textureAtlasOffsetBuffer);
+
+                if (supportBlur)
+                {
+                    // TODO: add blur texture buffer
+                }
             }
             else
             {
-                _vertexArrayObject = new VertexArrayObject(ColorShader.Instance.ShaderProgram);
+                _vertexArrayObject = new VertexArrayObject
+                (
+                    supportBlur
+                        ? BlurColorShader.Instance.ShaderProgram
+                        : ColorShader.Instance.ShaderProgram
+                );
 
                 _colorBuffer = new ColorBuffer(true);
                 _vertexArrayObject.AddBuffer(ColorShader.DefaultColorName, _colorBuffer);
+
+                if (supportBlur)
+                {
+                    _sizeBuffer = new PositionBuffer(true);
+                    _vertexArrayObject.AddBuffer(BlurColorShader.DefaultSizeName, _sizeBuffer);
+
+                    _blurRadiusBuffer = new ValueBuffer(true);
+                    _vertexArrayObject.AddBuffer(BlurColorShader.DefaultBlurRadiusName, _blurRadiusBuffer);
+                }
             }
 
             _indexBuffer = new IndexBuffer(_numVerticesPerNode + 1);
             _positionBuffer = new PositionBuffer(false);
-            _layerBuffer = new LayerBuffer(true);
+            _layerBuffer = new ValueBuffer(true);
 
             _vertexArrayObject.AddBuffer("index", _indexBuffer);
-            _vertexArrayObject.AddBuffer(ColorShader.DefaultPositionName, _positionBuffer);
-            
+            _vertexArrayObject.AddBuffer(ColorShader.DefaultPositionName, _positionBuffer);            
             _vertexArrayObject.AddBuffer(ColorShader.DefaultLayerName, _layerBuffer);
         }
 
+        // TODO: do we really need all these IndexOutOfRangeException?
         public int GetDrawIndex(RenderNode renderNode,
             PositionTransformation positionTransformation)
         {
@@ -83,6 +106,24 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     throw new IndexOutOfRangeException("Invalid color buffer index");
             }
 
+            int sizeBufferIndex = -1;
+            int blurRadiusBufferIndex = -1;
+            uint blurRadius = (renderNode is Shadow) ? (renderNode as Shadow).BlurRadius : 0u;
+
+            if (_supportBlur)
+            {
+                sizeBufferIndex = _sizeBuffer.Add(Util.LimitToShort(renderNode.Width),
+                    Util.LimitToShort(renderNode.Height));
+
+                if (sizeBufferIndex != index)
+                    throw new IndexOutOfRangeException("Invalid size buffer index");
+
+                blurRadiusBufferIndex = _blurRadiusBuffer.Add(blurRadius);
+
+                if (blurRadiusBufferIndex != index)
+                    throw new IndexOutOfRangeException("Invalid blur radius buffer index");
+            }
+
             var layer = renderNode.DisplayLayer;
             int layerBufferIndex = _layerBuffer.Add(layer);
 
@@ -99,6 +140,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
                 _positionBuffer.Add(Util.LimitToShort(position.X), Util.LimitToShort(position.Y), index + i);
                 if (!_supportTextures)
                     _colorBuffer.Add(renderNode.Color, colorBufferIndex + i);
+                if (_supportBlur)
+                {
+                    _sizeBuffer.Add(Util.LimitToShort(renderNode.Width), Util.LimitToShort(renderNode.Height),
+                        sizeBufferIndex + i);
+                    _blurRadiusBuffer.Add(blurRadius, blurRadiusBufferIndex + i);
+                }
                 _layerBuffer.Add(layer, layerBufferIndex + i);
             }
 
@@ -125,6 +172,14 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     Util.LimitToShort(position.X),
                     Util.LimitToShort(position.Y)
                 );
+
+                if (_supportBlur)
+                {
+                    _sizeBuffer.Update(index + i,
+                        Util.LimitToShort(renderNode.Width),
+                        Util.LimitToShort(renderNode.Height)
+                    );
+                }
             }
         }
 
@@ -162,6 +217,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             }
         }
 
+        public void UpdateBlurRadius(int index, uint blurRadius)
+        {
+            if (_blurRadiusBuffer != null)
+            {
+                for (int i = 0; i < _numVerticesPerNode; ++i)
+                    _blurRadiusBuffer.Update(index + i, blurRadius);
+            }
+        }
+
         public void FreeDrawIndex(int index)
         {
             for (int i = 0; i < _numVerticesPerNode; ++i)
@@ -186,6 +250,18 @@ namespace Silk.NET.UI.Renderer.OpenGL
             {
                 for (int i = 0; i < _numVerticesPerNode; ++i)
                     _layerBuffer.Remove(index + i);
+            }
+
+            if (_blurRadiusBuffer != null)
+            {
+                for (int i = 0; i < _numVerticesPerNode; ++i)
+                    _blurRadiusBuffer.Remove(index + i);
+            }
+
+            if (_sizeBuffer != null)
+            {
+                for (int i = 0; i < _numVerticesPerNode; ++i)
+                    _sizeBuffer.Remove(index + i);
             }
         }
 
@@ -237,6 +313,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     _textureAtlasOffsetBuffer?.Dispose();
                     _colorBuffer?.Dispose();
                     _layerBuffer?.Dispose();
+                    _blurRadiusBuffer?.Dispose();
+                    _sizeBuffer?.Dispose();
                     _indexBuffer?.Dispose();
 
                     _disposed = true;

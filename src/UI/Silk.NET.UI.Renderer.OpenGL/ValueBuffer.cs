@@ -5,7 +5,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 {
     using LayerValueType = UInt32;
 
-    internal class LayerBuffer : BufferObject<LayerValueType>
+    internal class ValueBuffer : BufferObject<LayerValueType>
     {
         private uint _index = 0;
         private bool _disposed = false;
@@ -22,7 +22,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public override int Dimension => 1;
 
-        public LayerBuffer(bool staticData)
+        public ValueBuffer(bool staticData)
         {
             _index = State.Gl.GenBuffer();
 

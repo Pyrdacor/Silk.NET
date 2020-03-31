@@ -299,7 +299,7 @@ namespace Silk.NET.UI
                 }
                 else
                 {
-                    return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider, includeManualValues);
+                    return Get<T>(name.Remove(dotPosition, 1), defaultValueProvider, false);
                 }
             }
 

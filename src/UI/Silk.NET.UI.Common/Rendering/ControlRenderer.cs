@@ -95,5 +95,10 @@ namespace Silk.NET.UI
         {
             return RunDrawCall(reference, () => _renderer.FillPolygon(color, points));
         }
+
+        public int DrawShadow(int? reference, int x, int y, int width, int height, Color color, int blurRadius, bool inset)
+        {
+            return RunDrawCall(reference, () => _renderer.DrawShadow(x, y, width, height, color, blurRadius, inset));
+        }
     }
 }

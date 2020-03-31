@@ -58,7 +58,6 @@ namespace Silk.NET.UI.Controls
 
             borderColor = backgroundColor;
 
-            // TODO: The following 4 lines have to improve
             OverrideStyleIfUndefined("border.size", 4);
             OverrideStyleIfUndefined("border.color", borderColor);
             OverrideStyleIfUndefined("border.linestyle", Pressed ? BorderLineStyle.Inset : BorderLineStyle.Outset);
@@ -66,6 +65,9 @@ namespace Silk.NET.UI.Controls
 
             // render with set styles
             base.OnRender(args);
+
+            // TODO: REMOVE
+            
         }
     }
 }

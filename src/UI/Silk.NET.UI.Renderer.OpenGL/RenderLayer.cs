@@ -10,6 +10,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
     {
         private bool _disposed = false;
         private Texture _texture = null;
+        private bool _blur = false;
         private readonly PrimitiveRenderer _primitiveRenderer = null;
 
         public Color? ColorKey
@@ -42,10 +43,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
             set;
         } = 0.0f;
 
-        public RenderLayer(Texture texture, int numVerticesPerNode, Color? colorKey = null, Color? colorOverlay = null)
+        public RenderLayer(Texture texture, int numVerticesPerNode, bool supportBlur,
+            Color? colorKey = null, Color? colorOverlay = null)
         {
-            _primitiveRenderer = new PrimitiveRenderer(texture != null, numVerticesPerNode);
+            _primitiveRenderer = new PrimitiveRenderer(texture != null, numVerticesPerNode, supportBlur);
             _texture = texture;
+            _blur = supportBlur;
             ColorKey = colorKey;
             ColorOverlay = colorOverlay;
         }
@@ -78,10 +81,12 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     textureShader.SetColorOverlay(1.0f, 1.0f, 1.0f, 1.0f);
                 else
                     textureShader.SetColorOverlay(ColorOverlay.Value.R / 255.0f, ColorOverlay.Value.G / 255.0f, ColorOverlay.Value.B / 255.0f, ColorOverlay.Value.A / 255.0f);
+
+                // TODO: blur
             }
             else
             {
-                var colorShader = ColorShader.Instance;
+                ColorShader colorShader = _blur ? BlurColorShader.Instance : ColorShader.Instance;
 
                 colorShader.UpdateMatrices(SupportZoom);
                 colorShader.SetZ(Z);
@@ -118,6 +123,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
         public void UpdateDisplayLayer(int index, uint displayLayer)
         {
             _primitiveRenderer.UpdateDisplayLayer(index, displayLayer);
+        }
+
+        public void UpdateBlurRadius(int index, uint blurRadius)
+        {
+            _primitiveRenderer.UpdateBlurRadius(index, blurRadius);
         }
 
         public void UpdateColor(int index, Color color)

@@ -36,7 +36,12 @@ namespace Silk.NET.UI.Test
                 BackgroundColor = Color.Beige,
                 BorderSize = 1,
                 BorderColor = "black",
-                BorderLineStyle = BorderLineStyle.Solid
+                BorderLineStyle = BorderLineStyle.Solid,
+                ShadowBlurRadius = 10,
+                ShadowColor = Color.Black,
+                ShadowXOffset = 20,
+                ShadowYOffset = 20,
+                ShadowVisible = true
             });
             Add(Selector.ForType(typeof(Panel)).WhenHovered(), new Style()
             {

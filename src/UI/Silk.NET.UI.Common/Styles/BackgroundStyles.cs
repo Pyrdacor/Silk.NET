@@ -4,7 +4,7 @@ namespace Silk.NET.UI
 {
     public struct BackgroundStyle
     {
-        [DefaultValue("#ffffff")] // TODO
+        [DefaultValue("#ffffff")]
         public ColorValue? Color;
     }
 }

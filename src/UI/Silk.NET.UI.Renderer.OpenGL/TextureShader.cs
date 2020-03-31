@@ -73,7 +73,8 @@
         protected TextureShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string texCoordName, string samplerName, string colorKeyName, string colorOverlayName,
             string atlasSizeName, string layerName, string[] fragmentShaderLines, string[] vertexShaderLines)
-            : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, layerName, fragmentShaderLines, vertexShaderLines)
+            : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName, layerName,
+                fragmentShaderLines, vertexShaderLines)
         {
             _texCoordName = texCoordName;
             _samplerName = samplerName;

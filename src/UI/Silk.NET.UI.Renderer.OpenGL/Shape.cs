@@ -8,12 +8,20 @@ namespace Silk.NET.UI.Renderer.OpenGL
     /// </summary>
     internal class Shape : RenderNode
     {
-        private Shape(ControlRenderer controlRenderer,
+        protected Shape(ControlRenderer controlRenderer,
             RenderDimensionReference renderDimensionReference,
             params Point[] vertexPositions)
             : base(renderDimensionReference, vertexPositions)
         {
             Layer = controlRenderer.GetRenderLayer(vertexPositions.Length);
+        }
+
+        protected Shape(ControlRenderer controlRenderer,
+            RenderDimensionReference renderDimensionReference,
+            RenderLayer layer, params Point[] vertexPositions)
+            : base(renderDimensionReference, vertexPositions)
+        {
+            Layer = layer;
         }
 
         public static Shape CreateTriangle(ControlRenderer controlRenderer,

@@ -35,6 +35,14 @@ namespace Silk.NET.UI
                 return (U)(object)(_value.HasValue ? _value.Value : throw new InvalidCastException());
             else if (type == typeof(int?))
                 return (U)(object)_value;
+            else if (type == typeof(uint))
+            {
+                if (!_value.HasValue)
+                    throw new InvalidCastException();
+                if (_value.Value < 0)
+                    throw new ArgumentOutOfRangeException($"The value {_value.Value} can not be converted to an unsigned integer.");
+                return (U)(object)_value;
+            }
             else if (type == typeof(string))
                 return (U)(object)(_value.HasValue ? _value.Value.ToString() : null);
             else if (type == typeof(bool))
@@ -57,6 +65,15 @@ namespace Silk.NET.UI
                 Value = (int)value;
             else if (type == typeof(int?))
                 Value = (int?)value;
+            else if (type == typeof(uint))
+            {
+                uint uintValue = (uint)value;
+
+                if (uintValue > int.MaxValue)
+                    throw new ArgumentOutOfRangeException($"The given value {uintValue} is too large for a signed integer.");
+
+                Value = (int)uintValue;
+            }
             else if (type == typeof(string))
                 Value = int.Parse((string)value);
             else if (type == typeof(bool))
@@ -78,6 +95,8 @@ namespace Silk.NET.UI
                     return false;
                 return nullableInt == _value;
             }
+            else if (type == typeof(uint))
+                return _value == (uint)(object)value;
             else if (type == typeof(string))
             {
                 string stringValue = (string)(object)value;

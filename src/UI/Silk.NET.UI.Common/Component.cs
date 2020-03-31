@@ -30,6 +30,7 @@ namespace Silk.NET.UI
     {
         private Template _template;
         private Styles _styles;
+        private bool _viewInitialized = false;
 
         protected Component()
             : base(null)
@@ -42,19 +43,25 @@ namespace Silk.NET.UI
             _template.CreateFor(this);
             _template.Bind();
             _styles.Apply(this);
+            Invalidate();
+            _viewInitialized = true;
         }
 
         internal override void DestroyView()
         {
             // TODO remove from renderer
+            _viewInitialized = false;
         }
 
         internal override void CheckStyleChanges()
         {
-            Parent?.CheckStyleChanges();
+            if (_viewInitialized)
+            {
+                Parent?.CheckStyleChanges();
             
-            if (_styles.Apply(this))
-                Invalidate();
+                if (_styles.Apply(this))
+                    Invalidate();
+            }
         }
 
         internal static Component Create(Type type, string id, bool root)

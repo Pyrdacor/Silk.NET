@@ -8,6 +8,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
     internal class ControlRenderer : IControlRenderer
     {
         internal RenderLayer SpriteRenderLayer { get; }
+        internal RenderLayer ShadowRenderLayer { get; }
         private readonly Dictionary<int, RenderLayer> _shapeRenderLayers = new Dictionary<int, RenderLayer>();
         private readonly Dictionary<int, IRenderNode> _renderNodes = new Dictionary<int, IRenderNode>();
         private readonly IndexPool _renderNodeIndexPool = new IndexPool();
@@ -21,14 +22,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             _renderDimensionReference = renderDimensionReference;
             _context = new Context(renderDimensionReference);
 
-            SpriteRenderLayer = new RenderLayer(_textureAtlas.AtlasTexture, 4);
+            SpriteRenderLayer = new RenderLayer(_textureAtlas.AtlasTexture, 4, false);
+            ShadowRenderLayer = new RenderLayer(null, 4, true);
         }
 
         internal RenderLayer GetRenderLayer(int numVertices)
         {
             if (!_shapeRenderLayers.ContainsKey(numVertices))
             {
-                var renderLayer = new RenderLayer(null, numVertices);
+                var renderLayer = new RenderLayer(null, numVertices, false);
                 _shapeRenderLayers.Add(numVertices, renderLayer);
                 return renderLayer;
             }
@@ -48,7 +50,8 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
         public void EndRenderCycle()
         {
-            SpriteRenderLayer.Render();
+            ShadowRenderLayer.Render();
+            SpriteRenderLayer.Render();            
 
             foreach (var renderLayer in _shapeRenderLayers)
                 renderLayer.Value.Render();
@@ -202,6 +205,35 @@ namespace Silk.NET.UI.Renderer.OpenGL
             _renderNodes.Add(renderObjectIndex, shape);
 
             return renderObjectIndex;
+        }
+
+        public int DrawShadow(int x, int y, int width, int height, Color color, int blurRadius, bool inset)
+        {
+            if (inset)
+            {
+                // TODO
+                return -1;
+            }
+            else
+            {
+                if (blurRadius <= 0)
+                {
+                    return FillRectangle(x, y, width, height, color);
+                }
+                else
+                {
+                    int renderObjectIndex = _renderNodeIndexPool.AssignNextFreeIndex(out _);
+                    var shadow = new Shadow(this, _renderDimensionReference, x, y, width, height, (uint)blurRadius);
+
+                    shadow.Color = color;
+                    shadow.DisplayLayer = _displayLayer++;
+                    shadow.Visible = true;
+
+                    _renderNodes.Add(renderObjectIndex, shadow);
+
+                    return renderObjectIndex;
+                }
+            }
         }
     }
 

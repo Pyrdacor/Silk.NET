@@ -10,7 +10,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
     	private uint index = 0;
         private readonly Dictionary<string, PositionBuffer> _positionBuffers = new Dictionary<string, PositionBuffer>(4);
         private readonly Dictionary<string, ColorBuffer> _colorBuffers = new Dictionary<string, ColorBuffer>(4);
-        private readonly Dictionary<string, LayerBuffer> _layerBuffers = new Dictionary<string, LayerBuffer>(1);
+        private readonly Dictionary<string, ValueBuffer> _valueBuffers = new Dictionary<string, ValueBuffer>(1);
         private readonly Dictionary<string, IndexBuffer> _indexBuffers = new Dictionary<string, IndexBuffer>(4);
         private readonly Dictionary<string, int> _bufferLocations = new Dictionary<string, int>();
         private bool _disposed = false;
@@ -52,9 +52,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
             _colorBuffers.Add(name, buffer);
         }
 
-        public void AddBuffer(string name, LayerBuffer buffer)
+        public void AddBuffer(string name, ValueBuffer buffer)
         {
-            _layerBuffers.Add(name, buffer);
+            _valueBuffers.Add(name, buffer);
         }
 
         public void AddBuffer(string name, IndexBuffer buffer)
@@ -82,7 +82,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     _bufferLocations[buffer.Key] = (int)_program.BindInputBuffer(buffer.Key, buffer.Value);
                 }
 
-                foreach (var buffer in _layerBuffers)
+                foreach (var buffer in _valueBuffers)
                 {
                     _bufferLocations[buffer.Key] = (int)_program.BindInputBuffer(buffer.Key, buffer.Value);
                 }
@@ -118,7 +118,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                     _bufferLocations[buffer.Key] = -1;
                 }
 
-                foreach (var buffer in _layerBuffers)
+                foreach (var buffer in _valueBuffers)
                 {
                     _program.UnbindInputBuffer((uint)_bufferLocations[buffer.Key]);
                     _bufferLocations[buffer.Key] = -1;
@@ -165,7 +165,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
                             buffersChanged = true;
                     }
 
-                    foreach (var buffer in _layerBuffers)
+                    foreach (var buffer in _valueBuffers)
                     {
                         if (buffer.Value.RecreateUnbound())
                             buffersChanged = true;
