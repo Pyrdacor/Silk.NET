@@ -12,6 +12,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         private Texture _texture = null;
         private bool _blur = false;
         private readonly PrimitiveRenderer _primitiveRenderer = null;
+        private readonly RenderDimensionReference _renderDimensionReference = null;
 
         public Color? ColorKey
         {
@@ -44,8 +45,9 @@ namespace Silk.NET.UI.Renderer.OpenGL
         } = 0.0f;
 
         public RenderLayer(Texture texture, int numVerticesPerNode, bool supportBlur,
-            Color? colorKey = null, Color? colorOverlay = null)
+            RenderDimensionReference renderDimensionReference, Color? colorKey = null, Color? colorOverlay = null)
         {
+            _renderDimensionReference = renderDimensionReference;
             _primitiveRenderer = new PrimitiveRenderer(texture != null, numVerticesPerNode, supportBlur);
             _texture = texture;
             _blur = supportBlur;
@@ -90,6 +92,11 @@ namespace Silk.NET.UI.Renderer.OpenGL
 
                 colorShader.UpdateMatrices(SupportZoom);
                 colorShader.SetZ(Z);
+
+                if (_blur)
+                {
+                    (colorShader as BlurColorShader).SetScreenHeight((uint)_renderDimensionReference.Height);
+                }
             }
             
             _primitiveRenderer.Render();

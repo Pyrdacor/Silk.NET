@@ -68,6 +68,11 @@ namespace Silk.NET.UI.Test
             panel.Y = 210;
             panel.Width = 150;
             panel.Height = 120;
+
+            var button = this.Children["foo"];
+
+            button.X = 230;
+            button.Y = 230 - button.Height;
         }
     }
 

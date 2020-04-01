@@ -22,15 +22,15 @@ namespace Silk.NET.UI.Renderer.OpenGL
             _renderDimensionReference = renderDimensionReference;
             _context = new Context(renderDimensionReference);
 
-            SpriteRenderLayer = new RenderLayer(_textureAtlas.AtlasTexture, 4, false);
-            ShadowRenderLayer = new RenderLayer(null, 4, true);
+            SpriteRenderLayer = new RenderLayer(_textureAtlas.AtlasTexture, 4, false, renderDimensionReference);
+            ShadowRenderLayer = new RenderLayer(null, 4, true, renderDimensionReference);
         }
 
         internal RenderLayer GetRenderLayer(int numVertices)
         {
             if (!_shapeRenderLayers.ContainsKey(numVertices))
             {
-                var renderLayer = new RenderLayer(null, numVertices, false);
+                var renderLayer = new RenderLayer(null, numVertices, false, _renderDimensionReference);
                 _shapeRenderLayers.Add(numVertices, renderLayer);
                 return renderLayer;
             }

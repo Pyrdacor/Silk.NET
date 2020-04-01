@@ -36,59 +36,45 @@ namespace Silk.NET.UI.Renderer.OpenGL
     internal class BlurColorShader : ColorShader
     {
         private static BlurColorShader _blurColorShader = null;
+        internal static readonly string DefaultScreenHeightName = "screenHeight";
         internal static readonly string DefaultSizeName = "size";
         internal static readonly string DefaultBlurRadiusName = "blurRadius";
 
+        private readonly string _screenHeightName;
         private readonly string _sizeName;
         private readonly string _blurRadiusName;
 
         private static readonly string[] BlurColorFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
-            $"flat {GetInName(true)} vec4 pixelColor;",
-            $"",
-            $"void main()",
-            $"{{",
-            $"    {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = pixelColor;",
-            $"}}"
-        };
-
-        private static readonly string[] BlurColorVertexShader = new string[]
-        {
-            GetVertexShaderHeader(),
-            $"{GetInName(false)} ivec2 {DefaultPositionName};",
-            $"{GetInName(false)} ivec2 {DefaultSizeName};",
-            $"{GetInName(false)} uint {DefaultLayerName};",
-            $"{GetInName(false)} uvec4 {DefaultColorName};",
-            $"{GetInName(false)} uint {DefaultBlurRadiusName};",
-            $"uniform float {DefaultZName};",
-            $"uniform mat4 {DefaultProjectionMatrixName};",
-            $"uniform mat4 {DefaultModelViewMatrixName};",
-            $"flat {GetOutName()} vec4 pixelColor;",
+            $"{GetInName(true)} vec4 pixelColor;",
+            $"flat {GetInName(true)} uint screenH;",
+            $"flat {GetInName(true)} uint blurR;",
+            $"flat {GetInName(true)} ivec2 blurOuterSize;",
             $"",
             $"float get_blur_range(float x, float y, float w, float h)",
             $"{{",
-            $"    return 16 * (pow(x/w,4) + pow(y/h,4));",
+            $"    return 16.0f * (pow(x/w,4.0f) + pow(y/h,4.0f));",
             $"}}",
             $"",
-            $"float blur(ivec2 pos)",
+            $"float blur()",
             $"{{",
-            $"    if ({DefaultBlurRadiusName} == 0u)",
+            $"    if (blurR == 0u)",
             $"        return 1.0f;",
-            $"    return 1.0f;", // TODO: REMOVE
-            $"    float r = float({DefaultBlurRadiusName}) * 5;",
-            $"    float w = float({DefaultSizeName}.x);",
-            $"    float h = float({DefaultSizeName}.y);",
-            $"    float x = float(pos.x);", // TODO
-            $"    float y = float(pos.y);", // TODO
-            $"    float wi = w - r;",
-            $"    float hi = h - r;",
+            $"    float r = float(blurR);",
+            $"    float w = float(blurOuterSize.x);",
+            $"    float h = float(blurOuterSize.y);",
+            $"    float x = gl_FragCoord.x - 230.0f - w * 0.5f;", // TODO
+            $"    float y = float(screenH) - gl_FragCoord.y - 230.0f - h * 0.5f;", // TODO
+            $"    float wi = w - 2.0f * r;",
+            $"    float hi = h - 2.0f * r;",
             $"    float inner_range = get_blur_range(x, y, wi, hi);",
             $"    if (inner_range <= 1.0f)",
-            $"        return 1.0f;",
+            $"        return 0.0f;",
             $"    float outer_range = get_blur_range(x, y, w, h);",
             $"    if (outer_range > 1.0f)",
-            $"        return 0.0f;",
+            $"        return 1.0f;",
+            $"    //return 1.0f;", // TODO: test
             $"    float xc = 0.0f;",
             $"    float yc = y;",
             $"    if (x != 0)",
@@ -103,30 +89,60 @@ namespace Silk.NET.UI.Renderer.OpenGL
             $"",
             $"void main()",
             $"{{",
+            $"    {(HasGLFragColor() ? "gl_FragColor" : DefaultFragmentOutColorName)} = vec4(pixelColor.rgb, pixelColor.a * blur());",
+            $"}}"
+        };
+
+        private static readonly string[] BlurColorVertexShader = new string[]
+        {
+            GetVertexShaderHeader(),
+            $"{GetInName(false)} ivec2 {DefaultPositionName};",
+            $"{GetInName(false)} ivec2 {DefaultSizeName};",
+            $"{GetInName(false)} uint {DefaultLayerName};",
+            $"{GetInName(false)} uvec4 {DefaultColorName};",
+            $"{GetInName(false)} uint {DefaultBlurRadiusName};",
+            $"uniform uint {DefaultScreenHeightName};",
+            $"uniform float {DefaultZName};",
+            $"uniform mat4 {DefaultProjectionMatrixName};",
+            $"uniform mat4 {DefaultModelViewMatrixName};",
+            $"{GetOutName()} vec4 pixelColor;",
+            $"flat {GetOutName()} uint screenH;",
+            $"flat {GetOutName()} uint blurR;",
+            $"flat {GetOutName()} ivec2 blurOuterSize;",
+            $"",
+            $"void main()",
+            $"{{",
             $"    vec2 pos = vec2(float({DefaultPositionName}.x) + 0.49f, float({DefaultPositionName}.y) + 0.49f);",
-            $"    vec4 tpos = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultLayerName}) * 0.00001f, 1.0f);",
-            $"    float a = {DefaultColorName}.a == 0u ? 0.0f : blur({DefaultPositionName}) * {DefaultColorName}.a / 255.0f;",
-            $"    pixelColor = vec4({DefaultColorName}.r / 255.0f, {DefaultColorName}.g / 255.0f, {DefaultColorName}.b / 255.0f, a);",
-            $"    gl_Position = tpos;",
+            $"    pixelColor = vec4({DefaultColorName}.r / 255.0f, {DefaultColorName}.g / 255.0f, {DefaultColorName}.b / 255.0f, {DefaultColorName}.a / 255.0f);",
+            $"    screenH = {DefaultScreenHeightName};",
+            $"    blurR = {DefaultBlurRadiusName};",
+            $"    blurOuterSize = {DefaultSizeName};",
+            $"    gl_Position = {DefaultProjectionMatrixName} * {DefaultModelViewMatrixName} * vec4(pos, 1.0f - {DefaultZName} - float({DefaultLayerName}) * 0.00001f, 1.0f);",
             $"}}"
         };
 
         BlurColorShader()
             : this(DefaultModelViewMatrixName, DefaultProjectionMatrixName, DefaultZName, DefaultPositionName, 
-                  DefaultSizeName, DefaultBlurRadiusName, DefaultLayerName, BlurColorFragmentShader,
-                  BlurColorVertexShader)
+                  DefaultSizeName, DefaultBlurRadiusName, DefaultLayerName, DefaultScreenHeightName,
+                  BlurColorFragmentShader, BlurColorVertexShader)
         {
 
         }
 
         protected BlurColorShader(string modelViewMatrixName, string projectionMatrixName, string zName,
             string positionName, string sizeName, string blurRadiusName, string layerName,
-            string[] fragmentShaderLines, string[] vertexShaderLines)
+            string screenHeightName, string[] fragmentShaderLines, string[] vertexShaderLines)
             : base(modelViewMatrixName, projectionMatrixName, DefaultColorName, zName, positionName,
                 layerName, fragmentShaderLines, vertexShaderLines)
         {
+            _screenHeightName = screenHeightName;
             _sizeName = sizeName;
             _blurRadiusName = blurRadiusName;
+        }
+
+        public void SetScreenHeight(uint height)
+        {
+            _shaderProgram.SetInput(_screenHeightName, height);
         }
 
         public new static BlurColorShader Instance

@@ -74,7 +74,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
         private static readonly string[] ColorFragmentShader = new string[]
         {
             GetFragmentShaderHeader(),
-            $"flat {GetInName(true)} vec4 pixelColor;",
+            $"{GetInName(true)} vec4 pixelColor;",
             $"",
             $"void main()",
             $"{{",
@@ -91,7 +91,7 @@ namespace Silk.NET.UI.Renderer.OpenGL
             $"uniform float {DefaultZName};",
             $"uniform mat4 {DefaultProjectionMatrixName};",
             $"uniform mat4 {DefaultModelViewMatrixName};",
-            $"flat {GetOutName()} vec4 pixelColor;",
+            $"{GetOutName()} vec4 pixelColor;",
             $"",
             $"void main()",
             $"{{",
